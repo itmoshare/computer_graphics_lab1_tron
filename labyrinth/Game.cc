@@ -1,6 +1,6 @@
 #include "Game.h"
 
-bool Game::LoadBitmapFromFile(const std::wstring filename, Resource resource)
+bool Game::LoadBitmapFromFile(const std::wstring filename)
 {
     Bitmap bitmap;
     GDIBitmap gdi;
@@ -20,8 +20,8 @@ bool Game::LoadBitmapFromFile(const std::wstring filename, Resource resource)
     gdiBitmaps.push_back(gdi);
     bitmap.index = gdiBitmaps.size() - 1;
     bitmaps.push_back(bitmap);
-    bitmapDictionary[resource] = bitmap;
-    fileDictionary[resource] = filename;
+    bitmapDictionary[1] = bitmap; //todo
+    fileDictionary[1] = filename; //todo
 
     return true;
 }
@@ -180,25 +180,25 @@ void Game::EndGraphics()
 void Game::FreeBitmap(Bitmap bitmap)
 {
     // Find the resource, from the bitmap, to free
-    auto findResult = std::find_if(std::begin(bitmapDictionary), std::end(bitmapDictionary), [&](const std::pair<Resource, Bitmap>& pair) {
-        return pair.second.index == bitmap.index;
-    });
-    Resource foundKey;
-    if (findResult != std::end(bitmapDictionary))
-    {
-        foundKey = findResult->first;
+    //auto findResult = std::find_if(std::begin(bitmapDictionary), std::end(bitmapDictionary), [&](const std::pair<Resource, Bitmap>& pair) {
+    //    return pair.second.index == bitmap.index;
+    //});
+    //Resource foundKey;
+    //if (findResult != std::end(bitmapDictionary))
+    //{
+    //    foundKey = findResult->first;
 
-        // Remove file and bitmap
-        bitmapDictionary.erase(foundKey);
-        fileDictionary.erase(foundKey);
-    }
+    //    // Remove file and bitmap
+    //    bitmapDictionary.erase(foundKey);
+    //    fileDictionary.erase(foundKey);
+    //}
 
-    // fria minnet som upptas av en bitmap
-    if (gdiBitmaps[bitmap.index].handle != 0)
-    {
-        DeleteObject(gdiBitmaps[bitmap.index].handle);
-        gdiBitmaps[bitmap.index].handle = 0;
-    }
+    //// fria minnet som upptas av en bitmap
+    //if (gdiBitmaps[bitmap.index].handle != 0)
+    //{
+    //    DeleteObject(gdiBitmaps[bitmap.index].handle);
+    //    gdiBitmaps[bitmap.index].handle = 0;
+    //}
 }
 
 void Game::ShutdownGraphics()

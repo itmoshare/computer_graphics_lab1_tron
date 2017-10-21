@@ -1,6 +1,8 @@
 #include "Player.h"
 
-Player::Player() {
-
+Player::Player(Bitmap figure, HBRUSH trackBrush, RECT position) {
+	this->figure = figure;
+	this->trackBrush = trackBrush;
+	this->position = position;
 }
-Player::~Player() { }
+

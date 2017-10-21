@@ -13,7 +13,6 @@
 
 
 #include "WindowOptions.h"
-#include "Resource.h"
 #include "Command.h"
 #include "Bitmap.h"
 #include "Player.h"
@@ -23,7 +22,7 @@ public:
     Game() {};
     ~Game() {};
 
-    bool LoadBitmapFromFile(const std::wstring filename, Resource resource);
+    bool LoadBitmapFromFile(const std::wstring filename);
     void InitializeGraphics(HWND window);    
     void BeginGraphics();
     void DrawBitmap(Bitmap bitmap, int x, int y)  const;
@@ -38,10 +37,7 @@ public:
     void MovePlayer(Command command);
     void ProcessInput(Command command);    
     void CheckWinningCondition();
-	void DrawBackground(int windowWidth, int WindowHeight, HDC hdc);
-	void DrawWall(double x, double y, double width, double height, HBRUSH brush, HDC hdc);
-	void DrawSmallWall(double &x, double y, HBRUSH brush, HDC hdc);
-	void DrawBigWall(double &x, double y, HBRUSH brush, HDC hdc);
+	
 
     // GDI-related stuff
     HWND window;
@@ -66,8 +62,8 @@ public:
     };
     // EOF GDI
 
-    std::map<Resource, Bitmap> bitmapDictionary;
-    std::map<Resource, std::wstring> fileDictionary;
+    std::map<int, Bitmap> bitmapDictionary;
+    std::map<int, std::wstring> fileDictionary;
     std::vector<GDIBitmap> gdiBitmaps;
     std::vector<Bitmap> bitmaps;
     std::shared_ptr<Player> player;
@@ -75,7 +71,11 @@ public:
     Bitmap playerBitmap;
     int score;
     HGDIOBJ oldObject;
-private:    
+private: 
+	void DrawBackground(int windowWidth, int WindowHeight, HDC hdc);
+	void DrawWall(double x, double y, double width, double height, HBRUSH brush, HDC hdc);
+	void DrawSmallWall(double &x, double y, HBRUSH brush, HDC hdc);
+	void DrawBigWall(double &x, double y, HBRUSH brush, HDC hdc);
 };
 
 #endif
