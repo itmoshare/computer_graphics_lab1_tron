@@ -94,7 +94,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 void Render(double interpolation) {
-   // game->Render(interpolation);
+    game->Render(interpolation);
 }
 
 void processInput(const std::shared_ptr<Game>& game, MSG* msg) {
@@ -135,11 +135,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     game = std::make_shared<Game>();
     game->InitializeGraphics(hwnd);
-/*
-    std::shared_ptr<Level> level0 = Utils::loadLevel(std::string("levels/level0.txt"));
-    game->AddLevel(level0);*/
-
-   // game->Start();
 
     MSG msg = { 0 };
 
@@ -155,7 +150,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         previousTime = currentTime;
 
         processInput(game, &msg);
-        //Render(1.0);
+        Render(1.0);
         //game->CheckWinningCondition();
 
         if (SEC_PER_UPDATE - deltaTime > 0)

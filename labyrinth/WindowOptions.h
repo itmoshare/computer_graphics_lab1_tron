@@ -27,6 +27,7 @@ public:
 
 	static const int BORDER_WIDTH;
 
+
     static std::vector<std::tuple<int, int>> ButtonPositions;
     static std::vector<wchar_t*> ButtonLabels;
     static std::vector<int> ButtonIDs;

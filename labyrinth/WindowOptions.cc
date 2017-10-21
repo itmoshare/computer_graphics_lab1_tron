@@ -44,5 +44,4 @@ const int WindowOption::VERTICALL_WALL_COUNT = 9;
 
 const int WindowOption::BORDER_WIDTH = 20;
 
-
 bool WindowOption::IsRunning = true;

@@ -1,6 +1,6 @@
 #include "Game.h"
 
-bool Game::LoadBitmapFromFile(const std::wstring filename)
+bool Game::LoadBitmapFromFile(const std::wstring filename, std::string resourceName)
 {
     Bitmap bitmap;
     GDIBitmap gdi;
@@ -20,8 +20,8 @@ bool Game::LoadBitmapFromFile(const std::wstring filename)
     gdiBitmaps.push_back(gdi);
     bitmap.index = gdiBitmaps.size() - 1;
     bitmaps.push_back(bitmap);
-    bitmapDictionary[1] = bitmap; //todo
-    fileDictionary[1] = filename; //todo
+    bitmapDictionary[resourceName] = bitmap; //todo
+    fileDictionary[resourceName] = filename; //todo
 
     return true;
 }
@@ -65,17 +65,25 @@ void Game::DrawBackground(int windowWidth, int WindowHeight, HDC hdc) {
 	double currentY = WindowOption::BORDER_WIDTH;
 	for (int i = 0; i < WindowOption::VERTICALL_WALL_COUNT; i++) {
 		Game::DrawSmallWall(currentX, currentY, wallBrush, hdc);
+		if (i == 0)
+			path_xs.push_back(currentX);
 		currentX += WindowOption::PATH_WIDTH;
 		for (int j = 0; j < WindowOption::VERTICALL_WALL_COUNT; j++)
 		{
 			DrawBigWall(currentX, currentY, wallBrush, hdc);
+			if (i == 0)
+				path_xs.push_back(currentX);
 			currentX += WindowOption::PATH_WIDTH;
 		}
 		Game::DrawSmallWall(currentX, currentY, wallBrush, hdc);
 		//Line drawn
-		currentY += WindowOption::PATH_WIDTH;
-		currentY += WindowOption::WALL_HEIGHT;
-		currentX = WindowOption::BORDER_WIDTH;
+		if (i != WindowOption::VERTICALL_WALL_COUNT - 1) {
+			currentY += WindowOption::WALL_HEIGHT;
+			path_ys.push_back(currentY);
+			currentY += WindowOption::PATH_WIDTH;
+			currentX = WindowOption::BORDER_WIDTH;
+		}
+		
 	}
 }
 
@@ -86,7 +94,7 @@ void Game::InitializeGraphics(HWND window)
     this->window = window;
 
     HDC hdc = GetDC(this->window);
-    //backbufferDC = CreateCompatibleDC(hdc);
+    backbufferDC = CreateCompatibleDC(hdc);
 
     RECT windowSize = { 0 };
     windowSize = WindowOption::MAP_CANVAS_RECT;
@@ -99,14 +107,19 @@ void Game::InitializeGraphics(HWND window)
 	
 	DrawBackground(windowWidth, windowHeight, hdc);
 	
+	Game::InitPlayers();
 
-   // backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
+
+
+    backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
     // Store old object so that we don't leak.
-   // oldObject = SelectObject(backbufferDC, backbufferBitmap);
+    oldObject = SelectObject(backbufferDC, backbufferBitmap);
 
     //SetBkMode(backbufferDC, TRANSPARENT);
 
-    //bitmapDC = CreateCompatibleDC(hdc);
+    bitmapDC = CreateCompatibleDC(hdc);
+
+	//DrawPlayers();
 
     //// Load assets
     //LoadBitmapFromFile(std::wstring(_T("wall.bmp")), Resource::WallTile);
@@ -128,11 +141,13 @@ void Game::BeginGraphics()
     FillRect(backbufferDC, &rectangle, (HBRUSH)COLOR_BACKGROUND);
 }
 
+
+
 void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
     SelectObject(bitmapDC, gdi.handle);
-    BitBlt(backbufferDC, x, y, gdi.width, gdi.height, bitmapDC, 0, 0, SRCCOPY);
+    BitBlt(GetDC(this->window), x, y, gdi.width, gdi.height, bitmapDC, 0, 0, SRCCOPY);
 }
 
 void Game::DrawString(const std::wstring text, COLORREF color, int x, int y) const
@@ -141,32 +156,22 @@ void Game::DrawString(const std::wstring text, COLORREF color, int x, int y) con
     TextOut(backbufferDC, x, y, text.c_str(), text.size());
 }
 
-void Game::DrawLevel() const {
+void DrawPlayer() {
 	
-    /*for (int y = 0; y < currentLevel->TILES_PER_ROW; y++) {
-        for (int x = 0; x < currentLevel->TILES_PER_COLUMN; x++) {
-            auto resource = currentLevel->tiles[x + (y * currentLevel->TILES_PER_COLUMN)];
-            DrawBitmap(bitmapDictionary.at(resource), x * WindowOption::TILE_WIDTH, y * WindowOption::TILE_HEIGHT);
-        }
-    }*/
+}
+
+void Game::DrawPlayers() const {
+	
+	DrawBitmap(player->figure, player->X, player->Y);
+	
+	for (int i = 0; i < computerPlayers.size(); i++) {
+		DrawBitmap(computerPlayers[i].figure, computerPlayers[i].X, computerPlayers[i].Y);
+	}
 }
 
 void Game::Render(const double interpolation) {
-    //BeginGraphics();
-
-    //DrawLevel();
-
-    //// In case more entities are added.
-    //for (auto& entity : entities) {
-    //    DrawBitmap(bitmapDictionary.at(entity->resource), entity->x, entity->y);
-    //}
-
-    //std::wstring scoreText(_T("Score: "));
-    //scoreText += std::to_wstring(score);
-    //DrawString(scoreText, RGB(0,0,0), 2, 2);
-    //DrawString(scoreText, RGB(255, 255, 255), 0, 0);
-
-    //EndGraphics();
+    DrawPlayers();
+	//EndGraphics();
 }
 
 void Game::EndGraphics()
@@ -213,6 +218,43 @@ void Game::ShutdownGraphics()
     DeleteObject(this->backbufferBitmap);
     SelectObject(this->backbufferDC, oldObject);
     DeleteDC(this->backbufferDC);
+}
+
+void Game::InitPlayers() {
+	//human player
+	LoadBitmapFromFile(std::wstring(_T("tron_player.bmp")), "player");
+
+	int centerPathIndex = path_xs.size() / 2 - 1;
+
+	int playerX = path_xs[centerPathIndex] - WindowOption::PATH_WIDTH;
+	int playerY = windowHeight - WindowOption::BORDER_WIDTH - WindowOption::WALL_HEIGHT;
+
+	this->player = std::make_shared<Player>(
+		bitmapDictionary.at("player"), 
+		CreateSolidBrush(RGB(0, 0, 0)),
+		playerX, playerY);
+
+	int count = 1;
+	int positionDiff = 0;
+	int cplayerY = WindowOption::BORDER_WIDTH;
+	for (int i = 0; i < count; i++) {
+		LoadBitmapFromFile(std::wstring(_T("computer_player.bmp")), "computerPlayer" + std::to_string(i));
+		
+		if (i % 2 == 0) {
+			positionDiff = -positionDiff;
+		}
+		else {
+			positionDiff = -positionDiff+1;
+		}
+		int cplayerX = path_xs[centerPathIndex + positionDiff] - WindowOption::PATH_WIDTH;
+		
+		Player cplayer(
+			bitmapDictionary.at("computerPlayer" + std::to_string(i)),
+			CreateSolidBrush(RGB(100, 100, 100)), 
+			cplayerX, cplayerY);
+		this->computerPlayers.push_back(cplayer);
+	}
+
 }
 
 // Start game

@@ -1,6 +1,16 @@
 #ifndef PLAYER_H
 #define PLAYER_H
 
+#include <Windows.h>
+#include <algorithm>
+#include <iterator>
+#include <tchar.h>
+#include <cassert>
+#include <sstream>
+#include <vector>
+#include <memory>
+#include <map>
+
 #include "WindowOptions.h"
 #include "Direction.h"
 #include "Bitmap.h"
@@ -8,8 +18,9 @@
 class Player
 {
 public:
-    Player(Bitmap figure, HBRUSH trackBrush, RECT position);
-    ~Player();
+	Player() {};
+	Player(Bitmap figure, HBRUSH trackBrush, int x, int y);
+	~Player() {};
 
 	void TryMakeTurn();
 	void ReduceSpeed();
@@ -18,14 +29,15 @@ public:
 	void Move();
 
 	int speed;
-	RECT position;
+	int X; //center positions
+	int Y;
 	Direction currentDirection;
+	Bitmap figure;
+
 
 private:
 	void DrawTrack();
 
-
 	HBRUSH trackBrush;
-	Bitmap figure;
 };
 #endif
