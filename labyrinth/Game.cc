@@ -94,7 +94,9 @@ void Game::InitializeGraphics(HWND window)
     this->window = window;
 
     HDC hdc = GetDC(this->window);
-    backbufferDC = CreateCompatibleDC(hdc);
+   
+
+	
 
     RECT windowSize = { 0 };
     windowSize = WindowOption::MAP_CANVAS_RECT;
@@ -105,19 +107,31 @@ void Game::InitializeGraphics(HWND window)
     windowWidth = clientRect.right - clientRect.left;
     windowHeight = clientRect.bottom - clientRect.top;
 	
-	DrawBackground(windowWidth, windowHeight, hdc);
+	backgroundBufferDC = CreateCompatibleDC(hdc);
+	backgroundBufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
+	oldObject2 = SelectObject(backgroundBufferDC, backgroundBufferBitmap);
+
+	backbufferDC = CreateCompatibleDC(hdc);
+	backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
+	oldObject = SelectObject(backbufferDC, backbufferBitmap);
+
+
+	//DrawBackground(windowWidth, windowHeight, hdc);
+	DrawBackground(windowWidth, windowHeight, backgroundBufferDC);
+
 	
+
+
 	Game::InitPlayers();
 
 
-
-    backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
+	bitmapDC = CreateCompatibleDC(backgroundBufferDC);
+    //backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
     // Store old object so that we don't leak.
-    oldObject = SelectObject(backbufferDC, backbufferBitmap);
 
     //SetBkMode(backbufferDC, TRANSPARENT);
-
-    bitmapDC = CreateCompatibleDC(hdc);
+	
+    //bitmapDC = CreateCompatibleDC(hdc);
 
 	//DrawPlayers();
 
@@ -137,8 +151,20 @@ void Game::InitializeGraphics(HWND window)
 
 void Game::BeginGraphics()
 {
-    RECT rectangle = { 0, 0, windowWidth, windowHeight };
-    FillRect(backbufferDC, &rectangle, (HBRUSH)COLOR_BACKGROUND);
+	////saved bakcground, not redrawing it
+	//HDC windowDC = GetDC(window);
+	//BitBlt(windowDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0, SRCCOPY);
+	//ReleaseDC(window, windowDC);
+	
+	// draw on drawn bakcground
+	/*backbufferDC = CreateCompatibleDC(backgroundBufferDC);
+	backbufferBitmap = CreateCompatibleBitmap(backgroundBufferDC, windowWidth, windowHeight);
+	oldObject = SelectObject(backbufferDC, backbufferBitmap);
+
+	bitmapDC = CreateCompatibleDC(backgroundBufferDC);*/
+	/*MaskBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0,
+		backgroundBufferBitmap, windowWidth, windowHeight, SRCCOPY);*/
+	BitBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0, SRCCOPY);
 }
 
 
@@ -147,17 +173,13 @@ void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
     SelectObject(bitmapDC, gdi.handle);
-    BitBlt(GetDC(this->window), x, y, gdi.width, gdi.height, bitmapDC, 0, 0, SRCCOPY);
+    BitBlt(backbufferDC, x, y, gdi.width, gdi.height, bitmapDC, 0, 0, SRCCOPY);
 }
 
 void Game::DrawString(const std::wstring text, COLORREF color, int x, int y) const
 {
     SetTextColor(backbufferDC, color);
     TextOut(backbufferDC, x, y, text.c_str(), text.size());
-}
-
-void DrawPlayer() {
-	
 }
 
 void Game::DrawPlayers() const {
@@ -170,16 +192,21 @@ void Game::DrawPlayers() const {
 }
 
 void Game::Render(const double interpolation) {
-    DrawPlayers();
-	//EndGraphics();
+
+	BeginGraphics();
+	DrawPlayers();
+	EndGraphics();
 }
 
 void Game::EndGraphics()
 {
+	/*MaskBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0,
+		backgroundBufferBitmap, windowWidth, windowHeight, SRCCOPY);*/
+
     // Blit-block transfer to the main device context
     HDC windowDC = GetDC(window);
     BitBlt(windowDC, 0, 0, windowWidth, windowHeight, backbufferDC, 0, 0, SRCCOPY);
-    ReleaseDC(window, windowDC);
+    ReleaseDC(window, windowDC);	
 }
 
 void Game::FreeBitmap(Bitmap bitmap)
@@ -226,7 +253,7 @@ void Game::InitPlayers() {
 
 	int centerPathIndex = path_xs.size() / 2 - 1;
 
-	int playerX = path_xs[centerPathIndex] - WindowOption::PATH_WIDTH;
+	int playerX = path_xs[centerPathIndex] - (WindowOption::PATH_WIDTH / 2);
 	int playerY = windowHeight - WindowOption::BORDER_WIDTH - WindowOption::WALL_HEIGHT;
 
 	this->player = std::make_shared<Player>(
@@ -246,7 +273,7 @@ void Game::InitPlayers() {
 		else {
 			positionDiff = -positionDiff+1;
 		}
-		int cplayerX = path_xs[centerPathIndex + positionDiff] - WindowOption::PATH_WIDTH;
+		int cplayerX = path_xs[centerPathIndex + positionDiff] - (WindowOption::PATH_WIDTH / 2);
 		
 		Player cplayer(
 			bitmapDictionary.at("computerPlayer" + std::to_string(i)),
@@ -270,17 +297,21 @@ void Game::Start() {
 // Move player, assume level's contour is made out of walls,
 // otherwise perform boundary checks.
 void Game::MovePlayer(Command command) {
-    /*int x = (int)player->x / WindowOption::TILE_WIDTH;
-    int y = (int)player->y / WindowOption::TILE_HEIGHT;*/
-
-  
+	player->Move(GetDC(this->window));
 }
 
 void Game::ProcessInput(Command command) {
     switch (command) {
     case Command::MoveRight:
+
     case Command::SpeedUp:
+		player->currentDirection = Direction::Up;
+		MovePlayer(command);
+		break;
     case Command::Slow:
+		player->currentDirection = Direction::Down;
+		MovePlayer(command);
+		break;
     case Command::MoveLeft:
         MovePlayer(command);
         break;

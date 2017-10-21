@@ -27,6 +27,10 @@ public:
 
 	static const int BORDER_WIDTH;
 
+	static const int PLAYER_WIDTH;
+	static const int PLAYER_HEIGHT;
+
+
 
     static std::vector<std::tuple<int, int>> ButtonPositions;
     static std::vector<wchar_t*> ButtonLabels;

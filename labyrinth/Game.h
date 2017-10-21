@@ -48,6 +48,9 @@ public:
     HDC backbufferDC;
     HBITMAP backbufferBitmap;
 
+	HDC backgroundBufferDC;
+	HBITMAP backgroundBufferBitmap;
+
     HDC bitmapDC;
 
     struct GDIBitmap
@@ -79,6 +82,8 @@ public:
     int score;
 	int computerPlayersCount;
     HGDIOBJ oldObject;
+	HGDIOBJ oldObject2;
+
 private: 
 	void DrawBackground(int windowWidth, int WindowHeight, HDC hdc);
 	void DrawWall(double x, double y, double width, double height, HBRUSH brush, HDC hdc);

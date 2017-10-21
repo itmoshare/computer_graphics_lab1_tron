@@ -44,4 +44,9 @@ const int WindowOption::VERTICALL_WALL_COUNT = 9;
 
 const int WindowOption::BORDER_WIDTH = 20;
 
+const int WindowOption::PLAYER_WIDTH = WindowOption::PATH_WIDTH * 2;
+const int WindowOption::PLAYER_HEIGHT = WindowOption::WALL_HEIGHT;
+
+
+
 bool WindowOption::IsRunning = true;

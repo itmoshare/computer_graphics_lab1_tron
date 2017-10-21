@@ -26,7 +26,7 @@ public:
 	void ReduceSpeed();
 	void UpSpeed();
 	bool IsDead();
-	void Move();
+	void Move(HDC hdc);
 
 	int speed;
 	int X; //center positions
@@ -36,7 +36,7 @@ public:
 
 
 private:
-	void DrawTrack();
+	void DrawTrack(HDC hdc, int length);
 
 	HBRUSH trackBrush;
 };
