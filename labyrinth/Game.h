@@ -16,9 +16,7 @@
 #include "Resource.h"
 #include "Command.h"
 #include "Bitmap.h"
-#include "Entity.h"
 #include "Player.h"
-#include "Level.h"
 
 class Game {
 public:
@@ -40,7 +38,6 @@ public:
     void MovePlayer(Command command);
     void ProcessInput(Command command);    
     void CheckWinningCondition();
-    void AddLevel(std::shared_ptr<Level> level);
 	void DrawBackground(int windowWidth, int WindowHeight, HDC hdc);
 	void DrawWall(double x, double y, double width, double height, HBRUSH brush, HDC hdc);
 	void DrawSmallWall(double &x, double y, HBRUSH brush, HDC hdc);
@@ -69,11 +66,8 @@ public:
     };
     // EOF GDI
 
-    std::vector<std::shared_ptr<Level>> levels;
-    std::vector<std::shared_ptr<Entity>> entities;
     std::map<Resource, Bitmap> bitmapDictionary;
     std::map<Resource, std::wstring> fileDictionary;
-    std::shared_ptr<Level> currentLevel;
     std::vector<GDIBitmap> gdiBitmaps;
     std::vector<Bitmap> bitmaps;
     std::shared_ptr<Player> player;

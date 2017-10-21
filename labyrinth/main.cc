@@ -5,10 +5,7 @@
 #include <memory>
 
 #include "WindowOptions.h"
-#include "Entity.h"
 #include "Game.h"
-#include "Level.h"
-#include "Utils.h"
 
 HWND btnNorth = NULL;
 HWND btnEast = NULL;
@@ -23,7 +20,6 @@ const int ID_ABOUT = 3;
 std::shared_ptr<Game> game;
 std::weak_ptr<Game> wGame;
 
-std::vector<Entity*> entities;
 
 HMENU CreateMainMenu()
 {

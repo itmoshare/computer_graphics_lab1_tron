@@ -228,8 +228,8 @@ void Game::Start() {
 // Move player, assume level's contour is made out of walls,
 // otherwise perform boundary checks.
 void Game::MovePlayer(Command command) {
-    int x = (int)player->x / WindowOption::TILE_WIDTH;
-    int y = (int)player->y / WindowOption::TILE_HEIGHT;
+    /*int x = (int)player->x / WindowOption::TILE_WIDTH;
+    int y = (int)player->y / WindowOption::TILE_HEIGHT;*/
 
   
 }
@@ -264,9 +264,4 @@ void Game::CheckWinningCondition() {
             exit(1);
         }
     }*/
-}
-
-void Game::AddLevel(std::shared_ptr<Level> level) {
-    this->levels.push_back(level);
-    currentLevel = level;
 }
