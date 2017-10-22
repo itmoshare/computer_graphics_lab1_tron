@@ -32,7 +32,7 @@ public:
     void EndGraphics();
     void FreeBitmap(Bitmap bitmap);
     void ShutdownGraphics();
-	void InitGDI(int x, int y, int index);
+	void InitGDI(int x, int y, int index, bool revert);
 
     void Start();
     void ProcessInput(Direction direction);    
@@ -81,6 +81,8 @@ public:
     std::vector<GDIBitmap> gdiBitmaps;
     std::vector<Bitmap> bitmaps;
 	std::vector<RECT> walls;
+
+	std::vector<Player*> allPlayers;
 
 	std::vector<int> path_xs;
 	std::vector<int> path_ys;

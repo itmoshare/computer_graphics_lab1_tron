@@ -156,10 +156,17 @@ void Game::DrawPlayers() const {
 int moveDelay = 30;
 void Game::MovePlayers() {
 	if (moveDelay == 0) {
-		
-		GDIBitmap gdi = gdiBitmaps.at(player->figure.index);
-		player->Move(gdi.points, backgroundBufferDC);
-		gdiBitmaps[player->figure.index] = gdi;
+		GDIBitmap gdi = gdiBitmaps.at(this->player->figure.index);
+		this->player->Move(gdi.points, backgroundBufferDC);
+		gdiBitmaps[this->player->figure.index] = gdi;
+
+		for (int i = 0; i < computerPlayers.size(); i++)
+		{
+			GDIBitmap gdi = gdiBitmaps.at(computerPlayers[i].figure.index);
+			computerPlayers[i].Move(gdi.points, backgroundBufferDC);
+			gdiBitmaps[computerPlayers[i].figure.index] = gdi;
+		}
+			
 		
 		moveDelay = 30;
 	}
@@ -221,7 +228,7 @@ void Game::ShutdownGraphics()
     DeleteDC(this->backbufferDC);
 }
 
-void Game::InitGDI(int x, int y, int index) {
+void Game::InitGDI(int x, int y, int index, bool revert) {
 	GDIBitmap gdi = gdiBitmaps.at(index);
 	/*gdi.points[0] = { 317, 457 };
 	gdi.points[1] = { 317, 477 };
@@ -237,9 +244,17 @@ void Game::InitGDI(int x, int y, int index) {
 		WindowOption::BORDER_WIDTH + WindowOption::PLAYER_WIDTH };
 
 	gdi.points[2] = { WindowOption::BORDER_WIDTH , WindowOption::BORDER_WIDTH };*/
-	gdi.points[0] = { x, y };
-	gdi.points[1] = { x + gdi.width, y };
-	gdi.points[2] = { x, y + gdi.height };
+	if (!revert) {
+		gdi.points[0] = { x, y };
+		gdi.points[1] = { x + gdi.width, y };
+		gdi.points[2] = { x, y + gdi.height };
+	}
+	else {
+		gdi.points[0] = { x + gdi.width, y + gdi.height };
+		gdi.points[1] = { x, y + gdi.height };
+		gdi.points[2] = { x + gdi.width, y };
+	}
+	
 	gdiBitmaps[index] = gdi;
 }
 
@@ -254,10 +269,12 @@ void Game::InitPlayers() {
 
 	this->player = std::make_shared<Player>(
 		bitmapDictionary.at("player"), 
-		CreateSolidBrush(RGB(255, 255, 255)),
+		CreateSolidBrush(RGB(30, 136, 239)),
 		playerX, playerY);
 
-	InitGDI(playerX, playerY, player->figure.index);
+	InitGDI(playerX, playerY, player->figure.index, false);
+
+	this->allPlayers.push_back(&*this->player);
 
 	int count = 1;
 	int positionDiff = 0;
@@ -275,9 +292,10 @@ void Game::InitPlayers() {
 		
 		Player cplayer(
 			bitmapDictionary.at("computerPlayer" + std::to_string(i)),
-			CreateSolidBrush(RGB(100, 100, 100)), 
-			cplayerX, cplayerY);
-		InitGDI(cplayerX, cplayerY, bitmapDictionary.at("computerPlayer" + std::to_string(i)).index);
+			CreateSolidBrush(RGB(253, 216, 0)), 
+			cplayerX + WindowOption::PLAYER_WIDTH, cplayerY + WindowOption::PLAYER_HEIGHT);
+		cplayer.currentDirection = Direction::Down;
+		InitGDI(cplayerX, cplayerY, bitmapDictionary.at("computerPlayer" + std::to_string(i)).index, true);
 
 		this->computerPlayers.push_back(cplayer);
 	}
@@ -346,9 +364,7 @@ void Game::TurnPlayer(Direction direction, Player * player) {
 
 	int path_x = 0;
 	int path_y = 0;
-
 	
-
 	if (CanTurn(direction, player, path_x, path_y)) {
 		GDIBitmap gdBmp = gdiBitmaps.at(player->figure.index);
 
