@@ -254,7 +254,7 @@ void Game::InitPlayers() {
 
 	this->player = std::make_shared<Player>(
 		bitmapDictionary.at("player"), 
-		CreateSolidBrush(RGB(0, 0, 0)),
+		CreateSolidBrush(RGB(255, 255, 255)),
 		playerX, playerY);
 
 	InitGDI(playerX, playerY, player->figure.index);
@@ -346,6 +346,7 @@ void Game::TurnPlayer(Direction direction, Player * player) {
 
 	int path_x = 0;
 	int path_y = 0;
+
 	
 
 	if (CanTurn(direction, player, path_x, path_y)) {
@@ -400,6 +401,52 @@ void Game::TurnPlayer(Direction direction, Player * player) {
 
 }
 
+void Game::TurnPlayerNoWalls(Direction direction, Player * player) {
+		
+	GDIBitmap gdBmp = gdiBitmaps.at(player->figure.index);
+
+	player->currentDirection = direction;
+
+	switch (direction)
+	{
+	case Left:
+		player->X -= WindowOption::PLAYER_HEIGHT / 2;
+		player->Y += WindowOption::PLAYER_HEIGHT;
+		
+		gdBmp.points[1] = { player->X, player->Y - WindowOption::PLAYER_WIDTH };//upperright
+		gdBmp.points[2] = { player->X + WindowOption::PLAYER_HEIGHT, player->Y };//lowerleft
+		break;
+	case Right:
+
+		player->X += WindowOption::PLAYER_HEIGHT;//WindowOption::PLAYER_WIDTH;//path_y - player->Y;
+
+		gdBmp.points[1] = { player->X, player->Y + WindowOption::PLAYER_WIDTH };
+		gdBmp.points[2] = { player->X - WindowOption::PLAYER_HEIGHT, player->Y };//lowerleft
+		break;
+	}
+
+	switch (direction)
+	{
+	case Up:
+		player->Y -= WindowOption::PLAYER_HEIGHT;
+
+		gdBmp.points[1] = { player->X + WindowOption::PLAYER_WIDTH, player->Y };//upperright
+		gdBmp.points[2] = { player->X, player->Y + WindowOption::PLAYER_HEIGHT };//lowerleft
+		break;
+	case Down:
+		player->Y += WindowOption::PLAYER_HEIGHT;
+
+		gdBmp.points[1] = { player->X - WindowOption::PLAYER_WIDTH, player->Y };//upperright
+		gdBmp.points[2] = { player->X, player->Y - WindowOption::PLAYER_HEIGHT };//lowerleft
+		break;
+	}
+
+	gdBmp.points[0] = { player->X, player->Y }; //upperleft corner;
+	gdiBitmaps[player->figure.index] = gdBmp;
+	
+
+}
+
 void Game::ProcessInput(Direction direction) {
 	if (direction == player->currentDirection)
 	{
@@ -413,7 +460,11 @@ void Game::ProcessInput(Direction direction) {
 		return;
 	}
 	
-	TurnPlayer(direction, &*player);
+	GDIBitmap gdBmp = gdiBitmaps.at(player->figure.index);
+	this->player->Turn(gdBmp.points, direction, backgroundBufferDC);
+	gdiBitmaps[player->figure.index] = gdBmp;
+
+	// TurnPlayerNoWalls(direction, &*player);
 }
 
 void Game::CheckWinningCondition() {

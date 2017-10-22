@@ -11,43 +11,43 @@ Player::Player(Bitmap figure, HBRUSH trackBrush, int x, int y) {
 }
 
 void Player::DrawTrack(HDC hdc, int length) {
-	//RECT newTrackRect;
-	//int rectTop;
-	//int rectLeft;
-	//int rectRight;
-	//int rectBottom;
-	//switch (currentDirection)
-	//{
-	//	case Direction::Left:
-	//		rectTop = this->X + WindowOption::PLAYER_HEIGHT;
-	//		rectLeft = this->Y - (WindowOption::PATH_WIDTH / 2); //allign to path
-	//		rectRight = rectTop + length;
-	//		rectBottom = this->Y - 3 * (WindowOption::PATH_WIDTH / 2);
-	//		newTrackRect = { rectTop, rectLeft, rectRight, rectBottom };
-	//		break;
-	//	case Direction::Right:
-	//		rectTop = this->X - WindowOption::PLAYER_HEIGHT;
-	//		rectLeft = this->Y + (WindowOption::PATH_WIDTH / 2); //allign to path
-	//		rectRight = rectTop - length;
-	//		rectBottom = this->Y + 3 * (WindowOption::PATH_WIDTH / 2);
-	//		newTrackRect = { rectTop, rectLeft, rectRight, rectBottom };
-	//		break;
-	//	case Direction::Up:
-	//		rectTop = this->X - (WindowOption::PATH_WIDTH / 2);
-	//		rectLeft = this->Y + WindowOption::PLAYER_HEIGHT; 
-	//		rectRight = this->X + 3 * (WindowOption::PATH_WIDTH / 2);
-	//		rectBottom = rectTop + length;
-	//		newTrackRect = { rectTop, rectLeft, rectRight, rectBottom };
-	//		break;
-	//	case Direction::Down:
-	//		rectTop = this->X - (WindowOption::PATH_WIDTH / 2); //todo
-	//		rectLeft = this->Y + WindowOption::PLAYER_HEIGHT;
-	//		rectRight = this->X + 3 * (WindowOption::PATH_WIDTH / 2);
-	//		rectBottom = rectTop + length;
-	//		newTrackRect = { rectTop, rectLeft, rectRight, rectBottom };
-	//		break;
-	//}
-	//FillRect(hdc, &newTrackRect, trackBrush);
+	RECT newTrackRect;
+	int rectTop;
+	int rectLeft;
+	int rectRight;
+	int rectBottom;
+	switch (currentDirection)
+	{
+		case Direction::Left:
+			rectTop = this->X + WindowOption::PLAYER_HEIGHT;
+			rectLeft = this->Y - (WindowOption::PATH_WIDTH / 2); //allign to path
+			rectRight = rectTop + length;
+			rectBottom = this->Y - 3 * (WindowOption::PATH_WIDTH / 2);
+			newTrackRect = { rectTop, rectLeft - 2, rectRight, rectBottom + 2 };
+			break;
+		case Direction::Right:
+			rectTop = this->X - WindowOption::PLAYER_HEIGHT;
+			rectLeft = this->Y + (WindowOption::PATH_WIDTH / 2); //allign to path
+			rectRight = rectTop - length;
+			rectBottom = this->Y + 3 * (WindowOption::PATH_WIDTH / 2);
+			newTrackRect = { rectTop, rectLeft + 2, rectRight, rectBottom - 2 };
+			break;
+		case Direction::Up:
+			rectTop = this->X + (WindowOption::PATH_WIDTH / 2);
+			rectLeft = this->Y + WindowOption::PLAYER_HEIGHT; 
+			rectRight = this->X + 3 * (WindowOption::PATH_WIDTH / 2);
+			rectBottom = rectLeft + length;
+			newTrackRect = { rectTop + 2, rectLeft, rectRight - 2, rectBottom };
+			break;
+		case Direction::Down:
+			rectTop = this->X - (WindowOption::PATH_WIDTH / 2); //todo
+			rectLeft = this->Y - WindowOption::PLAYER_HEIGHT;
+			rectRight = this->X - 3 * (WindowOption::PATH_WIDTH / 2);
+			rectBottom = rectLeft - length;
+			newTrackRect = { rectTop -2, rectLeft, rectRight + 2, rectBottom };
+			break;
+	}
+	FillRect(hdc, &newTrackRect, trackBrush);
 }
 
 void Player::Move(LPPOINT points, HDC hdc) {
@@ -102,4 +102,72 @@ bool Player::IsOpositeDirection(Direction direction) {
 		case Direction::Down:
 			return currentDirection == Direction::Up;
 	}
+}
+
+void Player::Turn(LPPOINT points, Direction direction, HDC hdc) {
+
+	switch (direction)
+	{
+	case Left:
+		if (currentDirection == Direction::Up) {
+			this->X -= WindowOption::PLAYER_HEIGHT - 3 * WindowOption::PATH_WIDTH / 2 + 2;
+			this->Y += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH / 2 + 2;
+		}
+		else { //down
+			this->X -= WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH / 2 + 2;// -3 * WindowOption::PATH_WIDTH / 2 + 2;
+			this->Y -= WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
+		}
+
+		points[1] = { this->X, this->Y - WindowOption::PLAYER_WIDTH };//upperright
+		points[2] = { this->X + WindowOption::PLAYER_HEIGHT, this->Y };//lowerleft
+		break;
+	case Right:
+		if (currentDirection == Direction::Up) {
+			this->X += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH;
+			this->Y += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
+		}
+		else { // down
+			this->X += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH ;
+			this->Y -= WindowOption::PLAYER_HEIGHT + 3 * WindowOption::PATH_WIDTH / 2 - 2;
+		}
+		
+
+		points[1] = { this->X, this->Y + WindowOption::PLAYER_WIDTH };
+		points[2] = { this->X - WindowOption::PLAYER_HEIGHT, this->Y };//lowerleft
+		break;
+	}
+
+	switch (direction)
+	{
+	case Up:
+		if (currentDirection == Direction::Left) {
+			this->X += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
+			this->Y -= WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH;
+		}
+		else { //right
+			this->X -= WindowOption::PLAYER_HEIGHT + 3 * WindowOption::PATH_WIDTH / 2 - 2;
+			this->Y -= WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH;
+		}
+		
+
+		points[1] = { this->X + WindowOption::PLAYER_WIDTH, this->Y };//upperright
+		points[2] = { this->X, this->Y + WindowOption::PLAYER_HEIGHT };//lowerleft
+		break;
+	case Down:
+		if (currentDirection == Direction::Left) {
+			this->X += WindowOption::PLAYER_HEIGHT + 3 * WindowOption::PATH_WIDTH / 2 - 2;
+			this->Y += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH;
+		}
+		else { //right
+			this->X -= WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
+			this->Y += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH;
+		}
+
+		points[1] = { this->X - WindowOption::PLAYER_WIDTH, this->Y };//upperright
+		points[2] = { this->X, this->Y - WindowOption::PLAYER_HEIGHT };//lowerleft
+		break;
+	}
+
+	points[0] = { this->X, this->Y }; //upperleft corner;
+	currentDirection = direction;
 }

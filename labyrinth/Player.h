@@ -22,7 +22,7 @@ public:
 	Player(Bitmap figure, HBRUSH trackBrush, int x, int y);
 	~Player() {};
 
-	void TryMakeTurn();
+	void Turn(LPPOINT points, Direction direction, HDC hdc);
 	void ReduceSpeed();
 	void UpSpeed();
 	bool IsDead();

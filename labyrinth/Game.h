@@ -43,6 +43,8 @@ public:
 	bool CanTurn(Direction direction, Player * player, int &path_x, int &path_y);
 
 	void TurnPlayer(Direction direction, Player * player);
+	void TurnPlayerNoWalls(Direction direction, Player * player);
+
 
     // GDI-related stuff
     HWND window;
