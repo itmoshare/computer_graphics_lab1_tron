@@ -90,14 +90,10 @@ void Game::DrawBackground(int windowWidth, int WindowHeight, HDC hdc) {
 
 void Game::InitializeGraphics(HWND window)
 {
-    // Double buffering, borrowed from GDI-provided wrapper in next assignment
     this->window = window;
 
     HDC hdc = GetDC(this->window);
    
-
-	
-
     RECT windowSize = { 0 };
     windowSize = WindowOption::MAP_CANVAS_RECT;
 
@@ -107,63 +103,24 @@ void Game::InitializeGraphics(HWND window)
     windowWidth = clientRect.right - clientRect.left;
     windowHeight = clientRect.bottom - clientRect.top;
 	
+	//save drawn background to not redraw it everytime
 	backgroundBufferDC = CreateCompatibleDC(hdc);
 	backgroundBufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
 	oldObject2 = SelectObject(backgroundBufferDC, backgroundBufferBitmap);
 
+	// Double buffering
 	backbufferDC = CreateCompatibleDC(hdc);
 	backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
 	oldObject = SelectObject(backbufferDC, backbufferBitmap);
 
-
-	//DrawBackground(windowWidth, windowHeight, hdc);
 	DrawBackground(windowWidth, windowHeight, backgroundBufferDC);
 
-	
-
+	bitmapDC = CreateCompatibleDC(backgroundBufferDC);
 
 	Game::InitPlayers();
-
-
-	bitmapDC = CreateCompatibleDC(backgroundBufferDC);
-    //backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
-    // Store old object so that we don't leak.
-
-    //SetBkMode(backbufferDC, TRANSPARENT);
-	
-    //bitmapDC = CreateCompatibleDC(hdc);
-
-	//DrawPlayers();
-
-    //// Load assets
-    //LoadBitmapFromFile(std::wstring(_T("wall.bmp")), Resource::WallTile);
-    //LoadBitmapFromFile(std::wstring(_T("grass.bmp")), Resource::GrassTile);
-    //LoadBitmapFromFile(std::wstring(_T("start.bmp")), Resource::StartTile);
-    //LoadBitmapFromFile(std::wstring(_T("end.bmp")), Resource::EndTile);
-    //LoadBitmapFromFile(std::wstring(_T("player.bmp")), Resource::PlayerTile);
-
-    //this->player = std::make_shared<Player>(0, 0);
-    //player->resource = Resource::PlayerTile;
-
-    //// Initialize entities
-    //this->entities.push_back(player);
 }
 
-void Game::BeginGraphics()
-{
-	////saved bakcground, not redrawing it
-	//HDC windowDC = GetDC(window);
-	//BitBlt(windowDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0, SRCCOPY);
-	//ReleaseDC(window, windowDC);
-	
-	// draw on drawn bakcground
-	/*backbufferDC = CreateCompatibleDC(backgroundBufferDC);
-	backbufferBitmap = CreateCompatibleBitmap(backgroundBufferDC, windowWidth, windowHeight);
-	oldObject = SelectObject(backbufferDC, backbufferBitmap);
-
-	bitmapDC = CreateCompatibleDC(backgroundBufferDC);*/
-	/*MaskBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0,
-		backgroundBufferBitmap, windowWidth, windowHeight, SRCCOPY);*/
+void Game::BeginGraphics() {
 	BitBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0, SRCCOPY);
 }
 
@@ -173,7 +130,10 @@ void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
     SelectObject(bitmapDC, gdi.handle);
-    BitBlt(backbufferDC, x, y, gdi.width, gdi.height, bitmapDC, 0, 0, SRCCOPY);
+    //BitBlt(backbufferDC, x, y, gdi.width, gdi.height, bitmapDC, 0, 0, SRCCOPY);
+	
+	
+	bool a = PlgBlt(backbufferDC, gdi.points, bitmapDC, 0, 0, gdi.width, gdi.height, NULL, 0, 0);
 }
 
 void Game::DrawString(const std::wstring text, COLORREF color, int x, int y) const
@@ -191,18 +151,32 @@ void Game::DrawPlayers() const {
 	}
 }
 
+
+
+int moveDelay = 30;
+void Game::MovePlayers() {
+	if (moveDelay == 0) {
+		
+		GDIBitmap gdi = gdiBitmaps.at(player->figure.index);
+		player->Move(gdi.points, backgroundBufferDC);
+		gdiBitmaps[player->figure.index] = gdi;
+		
+		moveDelay = 30;
+	}
+	else
+		moveDelay--;
+}
+
 void Game::Render(const double interpolation) {
 
 	BeginGraphics();
+	MovePlayers();
 	DrawPlayers();
 	EndGraphics();
 }
 
 void Game::EndGraphics()
 {
-	/*MaskBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0,
-		backgroundBufferBitmap, windowWidth, windowHeight, SRCCOPY);*/
-
     // Blit-block transfer to the main device context
     HDC windowDC = GetDC(window);
     BitBlt(windowDC, 0, 0, windowWidth, windowHeight, backbufferDC, 0, 0, SRCCOPY);
@@ -247,6 +221,28 @@ void Game::ShutdownGraphics()
     DeleteDC(this->backbufferDC);
 }
 
+void Game::InitGDI(int x, int y, int index) {
+	GDIBitmap gdi = gdiBitmaps.at(index);
+	/*gdi.points[0] = { 317, 457 };
+	gdi.points[1] = { 317, 477 };
+	gdi.points[2] = { 271, 457 };*/
+	//player->Y = path_ys[7] - (WindowOption::PATH_WIDTH / 2);
+	//gdi.points[0] = { player->X, player->Y };
+	////gdi.points[0] = { WindowOption::BORDER_WIDTH + WindowOption::PLAYER_HEIGHT, WindowOption::BORDER_WIDTH };
+
+	//gdi.points[1] = { player->X, player->Y + WindowOption::PLAYER_WIDTH };
+	//gdi.points[2] = { player->X - WindowOption::PLAYER_HEIGHT, player->Y };//lowerleft
+
+	/*gdi.points[1] = { WindowOption::BORDER_WIDTH + WindowOption::PLAYER_HEIGHT,
+		WindowOption::BORDER_WIDTH + WindowOption::PLAYER_WIDTH };
+
+	gdi.points[2] = { WindowOption::BORDER_WIDTH , WindowOption::BORDER_WIDTH };*/
+	gdi.points[0] = { x, y };
+	gdi.points[1] = { x + gdi.width, y };
+	gdi.points[2] = { x, y + gdi.height };
+	gdiBitmaps[index] = gdi;
+}
+
 void Game::InitPlayers() {
 	//human player
 	LoadBitmapFromFile(std::wstring(_T("tron_player.bmp")), "player");
@@ -260,6 +256,8 @@ void Game::InitPlayers() {
 		bitmapDictionary.at("player"), 
 		CreateSolidBrush(RGB(0, 0, 0)),
 		playerX, playerY);
+
+	InitGDI(playerX, playerY, player->figure.index);
 
 	int count = 1;
 	int positionDiff = 0;
@@ -279,6 +277,8 @@ void Game::InitPlayers() {
 			bitmapDictionary.at("computerPlayer" + std::to_string(i)),
 			CreateSolidBrush(RGB(100, 100, 100)), 
 			cplayerX, cplayerY);
+		InitGDI(cplayerX, cplayerY, bitmapDictionary.at("computerPlayer" + std::to_string(i)).index);
+
 		this->computerPlayers.push_back(cplayer);
 	}
 
@@ -294,30 +294,126 @@ void Game::Start() {
     score = 0;*/
 }
 
-// Move player, assume level's contour is made out of walls,
-// otherwise perform boundary checks.
-void Game::MovePlayer(Command command) {
-	player->Move(GetDC(this->window));
+bool Game::CheckHorizontalPath(int y, int &path_y_out) {
+	for each (int path_y in path_ys)
+	{
+		if (y <= path_y + WindowOption::PLAYER_HEIGHT / 3 && y >= path_y - WindowOption::PLAYER_HEIGHT / 3)
+		{
+			path_y_out = path_y;
+			return true;
+		}
+	}
+	return false;
 }
 
-void Game::ProcessInput(Command command) {
-    switch (command) {
-    case Command::MoveRight:
+bool Game::CheckVerticalPath(int x, int &path_x_out) {
+	for each (int path_x in path_xs)
+	{
+		if (x <= path_x + WindowOption::PLAYER_HEIGHT / 3 && x >= path_x - WindowOption::PLAYER_HEIGHT / 3)
+		{
+			path_x_out = path_x;
+			return true;
+		}
+	}
+	return false;
+}
 
-    case Command::SpeedUp:
-		player->currentDirection = Direction::Up;
-		MovePlayer(command);
+bool Game::CanTurn(Direction direction, Player * player, int &path_x, int &path_y) {
+	int x = player->X;
+	int y = player->Y;
+
+	switch (direction)
+	{
+	case Left:
+		return CheckHorizontalPath(y, path_y);
 		break;
-    case Command::Slow:
-		player->currentDirection = Direction::Down;
-		MovePlayer(command);
+	case Right:
+		return CheckHorizontalPath(y, path_y);
 		break;
-    case Command::MoveLeft:
-        MovePlayer(command);
-        break;
-    case Command::Restart:
-        Start();
-    }
+	case Down:
+		return CheckVerticalPath(x, path_x);
+		break;
+	case Up:
+		return CheckVerticalPath(x, path_x);
+		break;
+	default:
+		return false;
+		break;
+	}
+}
+
+void Game::TurnPlayer(Direction direction, Player * player) {
+
+	int path_x = 0;
+	int path_y = 0;
+	
+
+	if (CanTurn(direction, player, path_x, path_y)) {
+		GDIBitmap gdBmp = gdiBitmaps.at(player->figure.index);
+
+		player->currentDirection = direction;
+		if (path_x == 0) {
+			//y path
+			switch (direction)
+			{
+			case Left:
+				player->X -= path_y - player->Y;
+				player->Y = path_y + (3 *WindowOption::PATH_WIDTH / 2);
+				
+				gdBmp.points[1] = { player->X, player->Y - WindowOption::PLAYER_WIDTH};//upperright
+				gdBmp.points[2] = { player->X + WindowOption::PLAYER_HEIGHT, player->Y};//lowerleft
+				break;
+			case Right:
+				
+				player->X += 0;//WindowOption::PLAYER_WIDTH;//path_y - player->Y;
+				player->Y = path_y - (WindowOption::PATH_WIDTH / 2);
+
+				gdBmp.points[1] = { player->X, player->Y + WindowOption::PLAYER_WIDTH };
+				gdBmp.points[2] = { player->X - WindowOption::PLAYER_HEIGHT, player->Y };//lowerleft
+				break;
+			}
+		}
+		else {
+			//x path
+			switch (direction)
+			{
+			case Up:
+				player->X = path_x - WindowOption::PATH_WIDTH / 2;
+				player->Y += path_x - player->X;
+
+				gdBmp.points[1] = { player->X + WindowOption::PLAYER_WIDTH, player->Y };//upperright
+				gdBmp.points[2] = { player->X, player->Y + WindowOption::PLAYER_HEIGHT };//lowerleft
+				break;
+			case Down:
+				player->X = path_x + (3 * WindowOption::PATH_WIDTH / 2) ;
+				player->Y -= path_x - player->X;
+
+				gdBmp.points[1] = { player->X - WindowOption::PLAYER_WIDTH, player->Y };//upperright
+				gdBmp.points[2] = { player->X, player->Y - WindowOption::PLAYER_HEIGHT };//lowerleft
+				break;
+			}
+			
+		}
+		gdBmp.points[0] = { player->X, player->Y }; //upperleft corner;
+		gdiBitmaps[player->figure.index] = gdBmp;
+	}
+
+}
+
+void Game::ProcessInput(Direction direction) {
+	if (direction == player->currentDirection)
+	{
+		player->UpSpeed();
+		return;
+	}
+
+	if (player->IsOpositeDirection(direction))
+	{
+		player->ReduceSpeed();
+		return;
+	}
+	
+	TurnPlayer(direction, &*player);
 }
 
 void Game::CheckWinningCondition() {

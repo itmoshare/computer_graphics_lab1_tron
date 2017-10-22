@@ -62,16 +62,16 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_KEYDOWN:
         switch (wParam) {
         case VK_UP:
-            game->ProcessInput(Command::SpeedUp);
+            game->ProcessInput(Direction::Up);
             break;
         case VK_RIGHT:
-            game->ProcessInput(Command::MoveRight);
+            game->ProcessInput(Direction::Right);
             break;
         case VK_DOWN:
-            game->ProcessInput(Command::Slow);
+            game->ProcessInput(Direction::Down);
             break;
         case VK_LEFT:
-            game->ProcessInput(Command::MoveLeft);
+            game->ProcessInput(Direction::Left);
             break;
         }
         break;

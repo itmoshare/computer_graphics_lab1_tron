@@ -26,7 +26,9 @@ public:
 	void ReduceSpeed();
 	void UpSpeed();
 	bool IsDead();
-	void Move(HDC hdc);
+	void Move(LPPOINT points, HDC hdc);
+
+	bool IsOpositeDirection(Direction direction);
 
 	int speed;
 	int X; //center positions

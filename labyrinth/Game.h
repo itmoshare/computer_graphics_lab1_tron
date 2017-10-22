@@ -13,7 +13,6 @@
 
 
 #include "WindowOptions.h"
-#include "Command.h"
 #include "Bitmap.h"
 #include "Player.h"
 
@@ -33,12 +32,17 @@ public:
     void EndGraphics();
     void FreeBitmap(Bitmap bitmap);
     void ShutdownGraphics();
+	void InitGDI(int x, int y, int index);
 
     void Start();
-    void MovePlayer(Command command);
-    void ProcessInput(Command command);    
+    void ProcessInput(Direction direction);    
     void CheckWinningCondition();
-	
+	void MovePlayers();
+	bool CheckHorizontalPath(int y, int &path_y_out);
+	bool CheckVerticalPath(int x, int &path_x_out);
+	bool CanTurn(Direction direction, Player * player, int &path_x, int &path_y);
+
+	void TurnPlayer(Direction direction, Player * player);
 
     // GDI-related stuff
     HWND window;
@@ -58,6 +62,7 @@ public:
         HBITMAP handle;
         int width;
         int height;
+		POINT points[3];
 
         GDIBitmap()
             : handle(0)

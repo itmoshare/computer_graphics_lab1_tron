@@ -20,7 +20,7 @@ public:
 	static const int WALL_WIDTH;
 	static const double WALL_HEIGHT;
 	static const double SMALL_WALL_WIDTH;
-	static const double PATH_WIDTH;
+	static const int PATH_WIDTH;
 
 	static const int HORIZONTAL_WALL_COUNT;
 	static const int VERTICALL_WALL_COUNT;

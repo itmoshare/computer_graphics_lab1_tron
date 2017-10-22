@@ -37,7 +37,7 @@ const int WindowOption::TILE_HEIGHT = 16;
 const int WindowOption::WALL_WIDTH = 60;
 const double WindowOption::WALL_HEIGHT = 46.6;
 const double WindowOption::SMALL_WALL_WIDTH = 22.5;
-const double WindowOption::PATH_WIDTH = 10;
+const int WindowOption::PATH_WIDTH = 10;
 
 const int WindowOption::HORIZONTAL_WALL_COUNT = 9;
 const int WindowOption::VERTICALL_WALL_COUNT = 9;
