@@ -121,6 +121,7 @@ void Game::InitializeGraphics(HWND window)
 }
 
 void Game::BeginGraphics() {
+	//copy drawn background to bufferdc
 	BitBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0, SRCCOPY);
 }
 
@@ -144,10 +145,9 @@ void Game::DrawString(const std::wstring text, COLORREF color, int x, int y) con
 
 void Game::DrawPlayers() const {
 	
-	DrawBitmap(player->figure, player->X, player->Y);
-	
-	for (int i = 0; i < computerPlayers.size(); i++) {
-		DrawBitmap(computerPlayers[i].figure, computerPlayers[i].X, computerPlayers[i].Y);
+	for (int i = 0; i < allPlayers.size(); i++)
+	{
+		DrawBitmap(allPlayers[i]->figure, allPlayers[i]->X, allPlayers[i]->Y);
 	}
 }
 
@@ -156,17 +156,19 @@ void Game::DrawPlayers() const {
 int moveDelay = 30;
 void Game::MovePlayers() {
 	if (moveDelay == 0) {
-		GDIBitmap gdi = gdiBitmaps.at(this->player->figure.index);
-		this->player->Move(gdi.points, backgroundBufferDC);
-		gdiBitmaps[this->player->figure.index] = gdi;
-
-		for (int i = 0; i < computerPlayers.size(); i++)
+		
+		for (int i = 0; i < allPlayers.size(); i++)
 		{
-			GDIBitmap gdi = gdiBitmaps.at(computerPlayers[i].figure.index);
-			computerPlayers[i].Move(gdi.points, backgroundBufferDC);
-			gdiBitmaps[computerPlayers[i].figure.index] = gdi;
+			if (!allPlayers[i]->isDead) {
+				GDIBitmap gdi = gdiBitmaps.at(allPlayers[i]->figure.index);
+				allPlayers[i]->Move(gdi.points, backgroundBufferDC);
+				gdiBitmaps[allPlayers[i]->figure.index] = gdi;
+				allPlayers[i]->CheckIsDead(allPlayers, backgroundBufferDC);
+			}
+			else {
+				int a = 3;
+			}
 		}
-			
 		
 		moveDelay = 30;
 	}
@@ -174,7 +176,20 @@ void Game::MovePlayers() {
 		moveDelay--;
 }
 
-void Game::Render(const double interpolation) {
+bool Game::IsPlayerWin() {
+	for each (std::shared_ptr<Player> cplayer in computerPlayers)
+	{
+		if (!cplayer->isDead)
+			return false;
+	}
+	return true;
+}
+
+bool Game::IsPlayerLose() {
+	return this->player->isDead;
+}
+
+void Game::Render() {
 
 	BeginGraphics();
 	MovePlayers();
@@ -262,6 +277,8 @@ void Game::InitPlayers() {
 	//human player
 	LoadBitmapFromFile(std::wstring(_T("tron_player.bmp")), "player");
 
+	RECT fieldRect = { WindowOption::BORDER_WIDTH, WindowOption::BORDER_WIDTH, windowWidth - WindowOption::BORDER_WIDTH, windowHeight - WindowOption::BORDER_WIDTH };
+
 	int centerPathIndex = path_xs.size() / 2 - 1;
 
 	int playerX = path_xs[centerPathIndex] - (WindowOption::PATH_WIDTH / 2);
@@ -270,11 +287,11 @@ void Game::InitPlayers() {
 	this->player = std::make_shared<Player>(
 		bitmapDictionary.at("player"), 
 		CreateSolidBrush(RGB(30, 136, 239)),
-		playerX, playerY);
+		playerX, playerY, fieldRect);
 
 	InitGDI(playerX, playerY, player->figure.index, false);
 
-	this->allPlayers.push_back(&*this->player);
+	this->allPlayers.push_back(this->player);
 
 	int count = 1;
 	int positionDiff = 0;
@@ -290,14 +307,15 @@ void Game::InitPlayers() {
 		}
 		int cplayerX = path_xs[centerPathIndex + positionDiff] - (WindowOption::PATH_WIDTH / 2);
 		
-		Player cplayer(
+		std::shared_ptr<Player> cplayer = std::make_shared<Player>(
 			bitmapDictionary.at("computerPlayer" + std::to_string(i)),
 			CreateSolidBrush(RGB(253, 216, 0)), 
-			cplayerX + WindowOption::PLAYER_WIDTH, cplayerY + WindowOption::PLAYER_HEIGHT);
-		cplayer.currentDirection = Direction::Down;
+			cplayerX + WindowOption::PLAYER_WIDTH, cplayerY + WindowOption::PLAYER_HEIGHT, fieldRect);
+		cplayer->currentDirection = Direction::Down;
 		InitGDI(cplayerX, cplayerY, bitmapDictionary.at("computerPlayer" + std::to_string(i)).index, true);
 
 		this->computerPlayers.push_back(cplayer);
+		this->allPlayers.push_back(cplayer);
 	}
 
 }

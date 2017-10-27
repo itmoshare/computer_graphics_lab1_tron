@@ -28,7 +28,8 @@ public:
     void DrawBitmap(Bitmap bitmap, int x, int y)  const;
     void DrawString(const std::wstring text, COLORREF color, int x, int y) const;
     void DrawPlayers() const;
-    void Render(const double interpolation);
+	void RemoveDeadPlayers();
+    void Render();
     void EndGraphics();
     void FreeBitmap(Bitmap bitmap);
     void ShutdownGraphics();
@@ -44,7 +45,8 @@ public:
 
 	void TurnPlayer(Direction direction, Player * player);
 	void TurnPlayerNoWalls(Direction direction, Player * player);
-
+	bool IsPlayerWin();
+	bool IsPlayerLose();
 
     // GDI-related stuff
     HWND window;
@@ -74,7 +76,7 @@ public:
     // EOF GDI
 
 	std::shared_ptr<Player> player;
-	std::vector<Player> computerPlayers;
+	std::vector<std::shared_ptr<Player>> computerPlayers;
 
     std::map<std::string, Bitmap> bitmapDictionary;
     std::map<std::string, std::wstring> fileDictionary;
@@ -82,7 +84,7 @@ public:
     std::vector<Bitmap> bitmaps;
 	std::vector<RECT> walls;
 
-	std::vector<Player*> allPlayers;
+	std::vector<std::shared_ptr<Player>> allPlayers;
 
 	std::vector<int> path_xs;
 	std::vector<int> path_ys;

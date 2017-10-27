@@ -93,8 +93,8 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-void Render(double interpolation) {
-    game->Render(interpolation);
+void Render() {
+    game->Render();
 }
 
 void processInput(const std::shared_ptr<Game>& game, MSG* msg) {
@@ -106,6 +106,25 @@ void processInput(const std::shared_ptr<Game>& game, MSG* msg) {
         TranslateMessage(msg);
         DispatchMessage(msg);
     }
+}
+
+void ShowString(LPCWSTR message, HWND hwnd) {
+	HDC hdc = GetWindowDC(hwnd);
+	SetTextColor(hdc, 0x00000000);
+	SetBkMode(hdc, TRANSPARENT);
+	RECT rect = { 100, 100, 100, 100 };
+	DrawText(hdc, message, -1, &rect, DT_SINGLELINE | DT_NOCLIP);
+	DeleteDC(hdc);
+}
+
+void DrawLoseText(HWND hwnd) {
+	LPCWSTR message = L"You win";
+	ShowString(message, hwnd);
+}
+
+void DrawWinText(HWND hwnd) {
+	LPCWSTR message = L"You lose";
+	ShowString(message, hwnd);
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
@@ -150,7 +169,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         previousTime = currentTime;
 
         processInput(game, &msg);
-        Render(1.0);
+		/*if (game->IsPlayerWin())
+			DrawWinText(hwnd);
+		else if (game->IsPlayerLose())
+			DrawLoseText(hwnd);
+		else*/
+			Render();
         //game->CheckWinningCondition();
 
         if (SEC_PER_UPDATE - deltaTime > 0)

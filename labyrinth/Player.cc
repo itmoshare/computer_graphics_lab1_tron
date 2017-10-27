@@ -1,53 +1,117 @@
 #include "Player.h"
 
-Player::Player(Bitmap figure, HBRUSH trackBrush, int x, int y) {
+#define LEFT  1  /* двоичное 0001 */
+#define RIGHT 2  /* двоичное 0010 */
+#define BOT   4  /* двоичное 0100 */
+#define TOP   8  /* двоичное 1000 */
+
+Player::Player(Bitmap figure, HBRUSH trackBrush, int x, int y, RECT field) {
 	this->figure = figure;
 	this->trackBrush = trackBrush;
 	this->X = x;
 	this->Y = y;
+	this->field = field;
 
 	this->speed = 1;
 	this->currentDirection = Direction::Up;
+	this->isDead = false;
+	this->afterTurn = false;
 }
 
 void Player::DrawTrack(HDC hdc, int length) {
 	RECT newTrackRect;
-	int rectTop;
 	int rectLeft;
+	int rectTop;
 	int rectRight;
 	int rectBottom;
 	switch (currentDirection)
 	{
 		case Direction::Left:
-			rectTop = this->X + WindowOption::PLAYER_HEIGHT;
-			rectLeft = this->Y - (WindowOption::PATH_WIDTH / 2); //allign to path
-			rectRight = rectTop + length;
+			rectLeft = this->X + WindowOption::PLAYER_HEIGHT;
+			rectTop = this->Y - (WindowOption::PATH_WIDTH / 2); //allign to path
+			rectRight = rectLeft + length;
 			rectBottom = this->Y - 3 * (WindowOption::PATH_WIDTH / 2);
-			newTrackRect = { rectTop, rectLeft - 2, rectRight, rectBottom + 2 };
+			newTrackRect = { rectLeft, rectTop - 2, rectRight, rectBottom + 2 };
+			
+			if (afterTurn || trackPoints.size() == 0) {
+				std::shared_ptr<LineDescription> trackLine = std::make_shared<LineDescription>();
+				trackLine->beginPoint = { newTrackRect.left, newTrackRect.top };
+				trackLine->endPoint = { newTrackRect.right, newTrackRect.bottom + WindowOption::PATH_WIDTH - 4 };
+				trackPoints.push_back(trackLine);
+			}
+			else {
+				std::shared_ptr<LineDescription> prevLine = trackPoints.at(trackPoints.size() - 1);
+				//change left point to new
+				prevLine->beginPoint.x = newTrackRect.left;
+				prevLine->beginPoint.y = newTrackRect.top;
+			}
 			break;
 		case Direction::Right:
-			rectTop = this->X - WindowOption::PLAYER_HEIGHT;
-			rectLeft = this->Y + (WindowOption::PATH_WIDTH / 2); //allign to path
-			rectRight = rectTop - length;
+			rectLeft = this->X - WindowOption::PLAYER_HEIGHT;
+			rectTop = this->Y + (WindowOption::PATH_WIDTH / 2); //allign to path
+			rectRight = rectLeft - length;
 			rectBottom = this->Y + 3 * (WindowOption::PATH_WIDTH / 2);
-			newTrackRect = { rectTop, rectLeft + 2, rectRight, rectBottom - 2 };
+			newTrackRect = { rectLeft, rectTop + 2, rectRight, rectBottom - 2 };
+
+			if (afterTurn || trackPoints.size() == 0) {
+				std::shared_ptr<LineDescription> trackLine = std::make_shared<LineDescription>();
+				trackLine->beginPoint = { newTrackRect.right, newTrackRect.bottom };
+				trackLine->endPoint = { newTrackRect.left, newTrackRect.top + WindowOption::PATH_WIDTH - 4};
+				trackPoints.push_back(trackLine);
+			}
+			else {
+				std::shared_ptr<LineDescription> prevLine = trackPoints.at(trackPoints.size() - 1);
+				//change right point to new
+				prevLine->endPoint.x = newTrackRect.left;
+				prevLine->endPoint.y = newTrackRect.top + WindowOption::PATH_WIDTH - 4;
+			}
 			break;
 		case Direction::Up:
-			rectTop = this->X + (WindowOption::PATH_WIDTH / 2);
-			rectLeft = this->Y + WindowOption::PLAYER_HEIGHT; 
+			rectLeft = this->X + (WindowOption::PATH_WIDTH / 2);
+			rectTop = this->Y + WindowOption::PLAYER_HEIGHT; 
 			rectRight = this->X + 3 * (WindowOption::PATH_WIDTH / 2);
-			rectBottom = rectLeft + length;
-			newTrackRect = { rectTop + 2, rectLeft, rectRight - 2, rectBottom };
+			rectBottom = rectTop + length;
+			newTrackRect = { rectLeft + 2, rectTop, rectRight - 2, rectBottom };
+
+			if (afterTurn || trackPoints.size() == 0) {
+				std::shared_ptr<LineDescription> trackLine = std::make_shared<LineDescription>();
+				trackLine->beginPoint =  { newTrackRect.left, newTrackRect.top }; //up is begin, because it is must be less
+				trackLine->endPoint = { newTrackRect.right, newTrackRect.bottom };
+				trackPoints.push_back(trackLine);
+			}
+			else {
+				std::shared_ptr<LineDescription> prevLine = trackPoints.at(trackPoints.size() - 1);
+				//change up point to new
+				prevLine->beginPoint.x = newTrackRect.left;
+				prevLine->beginPoint.y = newTrackRect.top;
+			}
+
 			break;
 		case Direction::Down:
-			rectTop = this->X - (WindowOption::PATH_WIDTH / 2); //todo
-			rectLeft = this->Y - WindowOption::PLAYER_HEIGHT;
+			rectLeft = this->X - (WindowOption::PATH_WIDTH / 2); //todo
+			rectTop = this->Y - WindowOption::PLAYER_HEIGHT;
 			rectRight = this->X - 3 * (WindowOption::PATH_WIDTH / 2);
-			rectBottom = rectLeft - length;
-			newTrackRect = { rectTop -2, rectLeft, rectRight + 2, rectBottom };
+			rectBottom = rectTop - length;
+			newTrackRect = { rectLeft -2, rectTop, rectRight + 2, rectBottom };
+
+			if (afterTurn || trackPoints.size() == 0) {
+				std::shared_ptr<LineDescription> trackLine = std::make_shared<LineDescription>();
+				trackLine->beginPoint =  { newTrackRect.right, newTrackRect.bottom };//up is begin, because it is must be less
+				trackLine->endPoint = { newTrackRect.left, newTrackRect.top };
+				trackPoints.push_back(trackLine);
+			}
+			else {
+				std::shared_ptr<LineDescription> prevLine = trackPoints.at(trackPoints.size() - 1);
+				//change down point to new
+				prevLine->endPoint.x = newTrackRect.left;
+				prevLine->endPoint.y = newTrackRect.top;
+			}
+
 			break;
 	}
 	FillRect(hdc, &newTrackRect, trackBrush);
+	afterTurn = false;
+	
 }
 
 void Player::Move(LPPOINT points, HDC hdc) {
@@ -105,13 +169,14 @@ bool Player::IsOpositeDirection(Direction direction) {
 }
 
 void Player::Turn(LPPOINT points, Direction direction, HDC hdc) {
-
+	if (direction == currentDirection || IsOpositeDirection(direction))
+		return;
 	switch (direction)
 	{
 	case Left:
 		if (currentDirection == Direction::Up) {
-			this->X -= WindowOption::PLAYER_HEIGHT - 3 * WindowOption::PATH_WIDTH / 2 + 2;
-			this->Y += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH / 2 + 2;
+			this->X -= WindowOption::PLAYER_HEIGHT -   WindowOption::PATH_WIDTH / 2 -2;
+			this->Y += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH + 3;
 		}
 		else { //down
 			this->X -= WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH / 2 + 2;// -3 * WindowOption::PATH_WIDTH / 2 + 2;
@@ -123,11 +188,11 @@ void Player::Turn(LPPOINT points, Direction direction, HDC hdc) {
 		break;
 	case Right:
 		if (currentDirection == Direction::Up) {
-			this->X += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH;
+			this->X += WindowOption::PLAYER_HEIGHT + 3 * WindowOption::PATH_WIDTH / 2 - 2  ;
 			this->Y += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
 		}
 		else { // down
-			this->X += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH ;
+			this->X += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
 			this->Y -= WindowOption::PLAYER_HEIGHT + 3 * WindowOption::PATH_WIDTH / 2 - 2;
 		}
 		
@@ -156,11 +221,11 @@ void Player::Turn(LPPOINT points, Direction direction, HDC hdc) {
 	case Down:
 		if (currentDirection == Direction::Left) {
 			this->X += WindowOption::PLAYER_HEIGHT + 3 * WindowOption::PATH_WIDTH / 2 - 2;
-			this->Y += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH;
+			this->Y += WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 -2;
 		}
 		else { //right
 			this->X -= WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
-			this->Y += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH;
+			this->Y += WindowOption::PLAYER_HEIGHT + 3 * WindowOption::PATH_WIDTH / 2 - 2;
 		}
 
 		points[1] = { this->X - WindowOption::PLAYER_WIDTH, this->Y };//upperright
@@ -170,4 +235,183 @@ void Player::Turn(LPPOINT points, Direction direction, HDC hdc) {
 
 	points[0] = { this->X, this->Y }; //upperleft corner;
 	currentDirection = direction;
+	afterTurn = true;
+}
+
+RECT Player::GetCurrentRectNormalized() {
+	RECT rect;
+	switch (currentDirection)
+	{	
+	case Left:
+		rect = { this->X, this->Y - WindowOption::PLAYER_WIDTH, this->X + WindowOption::PLAYER_HEIGHT, this->Y };
+		break;
+	case Right:
+		rect = { this->X - WindowOption::PLAYER_HEIGHT, this->Y, this->X, this->Y + WindowOption::PLAYER_WIDTH };
+		break;
+	case Down:
+		rect = { this->X - WindowOption::PLAYER_WIDTH , this->Y - WindowOption::PLAYER_HEIGHT , this->X, this->Y };
+		break;
+	case Up:
+		rect = { this->X, this->Y, this->X + WindowOption::PLAYER_WIDTH , this->Y + WindowOption::PLAYER_HEIGHT };
+		break;
+	}
+	return rect;
+}
+
+bool Player::IsCollizedWithPlayerRect(RECT rect) {
+	switch (currentDirection)
+	{
+	case Left:
+		//return this->X > rect.left && this->X < rect.right && this->Y > 
+		break;
+	case Right:
+		break;
+	case Down:
+		break;
+	case Up:
+		break;
+	default:
+		break;
+	}
+	return false;
+}
+
+bool IsBetween(int check, int left, int right) {
+	return check > left && check < right;
+}
+
+int Player::GetPointCode(RECT r, POINT p) {
+	return (p.x <= r.left ? LEFT : 0) +  /* +1 если точка левее пр€моугольника */ \
+		(p.x >= r.right ? RIGHT : 0) +  /* +2 если точка правее пр€моугольника */\
+		(p.y >= r.bottom ? BOT : 0) +  /* +4 если точка ниже пр€моугольника */  \
+		(p.y <= r.top ? TOP : 0);     /* +8 если точка выше пр€моугольника */
+}
+
+bool Player::IsLineCrossedRect(RECT rect, std::shared_ptr<LineDescription> lineDesc) {
+	int code_a, code_b, code; /* код концов отрезка */
+	code_a = GetPointCode(rect, lineDesc->beginPoint);
+	code_b = GetPointCode(rect, lineDesc->endPoint);
+	
+	if (code_a == 1) {
+		int asds = 2;
+	} 
+
+	if (code_b == 2) {
+		int asd = 3;
+	}
+	if ((code_a & code_b) == 0)
+		return true;
+	else
+		return false;
+}
+
+bool Player::CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers, HDC hdc) {
+	RECT rectasd = {317, 380, 337, 426};
+	std::shared_ptr<LineDescription> ld = std::make_shared<LineDescription>();
+	ld->beginPoint.x = 257; ld->beginPoint.y = 388;
+	ld->endPoint.x = 411; ld->endPoint.y = 388;
+	IsLineCrossedRect(rectasd, ld);
+
+	//border collissions
+	if (X < field.left || X > field.right || Y < field.top || Y > field.bottom)
+	{
+		isDead = true;
+		return isDead;
+	}
+
+	RECT playerRect = this->GetCurrentRectNormalized();
+
+	for (int j = 0; j < allPlayers.size(); j++) {
+		std::shared_ptr<Player> player = allPlayers[j];
+		
+		
+		//tracks colission
+		for(int i=0; i<player->trackPoints.size(); i++)
+		{
+			std::shared_ptr<LineDescription> lineDesc = player->trackPoints[i];
+			
+			if (IsLineCrossedRect(playerRect, lineDesc))
+			{
+				RECT rect = { lineDesc->beginPoint.x - 2, lineDesc->beginPoint.y, lineDesc->endPoint.x, lineDesc->endPoint.y };
+				FillRect(hdc, &rect, CreateSolidBrush(RGB(255, 0, 0)));
+				isDead = true;
+				return true;
+			}
+
+			/*if(
+				(IsBetween(lineDesc->beginPoint.x, playerRect.left, playerRect.right) 
+					&& IsBetween(lineDesc->beginPoint.y, playerRect.top, playerRect.bottom))
+					||
+					(IsBetween(lineDesc->endPoint.x, playerRect.left, playerRect.right)
+						&& IsBetween(lineDesc->endPoint.y, playerRect.top, playerRect.bottom))
+				)
+			{
+				RECT rect = { lineDesc->beginPoint.x - 2, lineDesc->beginPoint.y, lineDesc->endPoint.x, lineDesc->endPoint.y };
+				FillRect(hdc, &rect, CreateSolidBrush(RGB(255, 0, 0)));
+				isDead = true;
+				return true;
+			}*/
+
+			//switch (currentDirection)
+			//{
+			//case Left:
+
+			//	if (this->X <lineDesc->beginPoint.x && 
+			//		this->Y > lineDesc->beginPoint.y && 
+			//		this->Y < lineDesc->endPoint.y && 
+			//		lineDesc->beginPoint.x - this->X < WindowOption::PLAYER_HEIGHT-WindowOption::PATH_WIDTH - 4 )
+			//	{
+			//		isDead = true;
+			//		return true;
+			//	}
+			//	break;
+			//case Right:
+			//	if (this->X > lineDesc->beginPoint.x && this->Y > lineDesc->beginPoint.y && this->Y < lineDesc->endPoint.y)
+			//	{
+			//		isDead = true;
+			//		return true;
+			//	}
+			//	break;
+			//case Down:
+			//	if (this->Y > lineDesc->beginPoint.y && this->X > lineDesc->beginPoint.x && this->X < lineDesc->endPoint.x)
+			//	{
+			//		isDead = true;
+			//		return true;
+			//	}
+			//	break;
+			//case Up:
+			//	if (this->Y > lineDesc->beginPoint.y && this->X > lineDesc->beginPoint.x && this->X < lineDesc->endPoint.x)
+			//	{
+			//		isDead = true;
+			//		return true;
+			//	}
+			//	break;
+			//}
+		}
+
+		//skip current player
+		if (player->figure.index == figure.index)
+			continue;
+		//collisions with player
+		switch (currentDirection)
+		{
+		case Left:
+			//if()
+			break;
+		case Right:
+			break;
+		case Down:
+			break;
+		case Up:
+			break;
+		default:
+			break;
+		}
+
+		isDead = false;
+		return false;
+
+	}
+
+
 }
