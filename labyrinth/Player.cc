@@ -288,30 +288,21 @@ int Player::GetPointCode(RECT r, POINT p) {
 }
 
 bool Player::IsLineCrossedRect(RECT rect, std::shared_ptr<LineDescription> lineDesc) {
-	int code_a, code_b, code; /* код концов отрезка */
+	int code_a, code_b; /* код концов отрезка */
 	code_a = GetPointCode(rect, lineDesc->beginPoint);
 	code_b = GetPointCode(rect, lineDesc->endPoint);
-	
-	if (code_a == 1) {
-		int asds = 2;
-	} 
 
-	if (code_b == 2) {
-		int asd = 3;
-	}
-	if ((code_a & code_b) == 0)
-		return true;
-	else
-		return false;
+	return (code_a & code_b) == 0;	
+}
+
+bool AreRectsCollied(RECT rect1, RECT rect2) {
+	return (rect1.left < rect2.right) && (rect1.right > rect2.left) &&
+		(rect1.top < rect2.bottom) && (rect1.bottom > rect2.top);
 }
 
 bool Player::CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers, HDC hdc) {
-	RECT rectasd = {317, 380, 337, 426};
-	std::shared_ptr<LineDescription> ld = std::make_shared<LineDescription>();
-	ld->beginPoint.x = 257; ld->beginPoint.y = 388;
-	ld->endPoint.x = 411; ld->endPoint.y = 388;
-	IsLineCrossedRect(rectasd, ld);
 
+	
 	//border collissions
 	if (X < field.left || X > field.right || Y < field.top || Y > field.bottom)
 	{
@@ -337,81 +328,20 @@ bool Player::CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers, HDC hd
 				isDead = true;
 				return true;
 			}
-
-			/*if(
-				(IsBetween(lineDesc->beginPoint.x, playerRect.left, playerRect.right) 
-					&& IsBetween(lineDesc->beginPoint.y, playerRect.top, playerRect.bottom))
-					||
-					(IsBetween(lineDesc->endPoint.x, playerRect.left, playerRect.right)
-						&& IsBetween(lineDesc->endPoint.y, playerRect.top, playerRect.bottom))
-				)
-			{
-				RECT rect = { lineDesc->beginPoint.x - 2, lineDesc->beginPoint.y, lineDesc->endPoint.x, lineDesc->endPoint.y };
-				FillRect(hdc, &rect, CreateSolidBrush(RGB(255, 0, 0)));
-				isDead = true;
-				return true;
-			}*/
-
-			//switch (currentDirection)
-			//{
-			//case Left:
-
-			//	if (this->X <lineDesc->beginPoint.x && 
-			//		this->Y > lineDesc->beginPoint.y && 
-			//		this->Y < lineDesc->endPoint.y && 
-			//		lineDesc->beginPoint.x - this->X < WindowOption::PLAYER_HEIGHT-WindowOption::PATH_WIDTH - 4 )
-			//	{
-			//		isDead = true;
-			//		return true;
-			//	}
-			//	break;
-			//case Right:
-			//	if (this->X > lineDesc->beginPoint.x && this->Y > lineDesc->beginPoint.y && this->Y < lineDesc->endPoint.y)
-			//	{
-			//		isDead = true;
-			//		return true;
-			//	}
-			//	break;
-			//case Down:
-			//	if (this->Y > lineDesc->beginPoint.y && this->X > lineDesc->beginPoint.x && this->X < lineDesc->endPoint.x)
-			//	{
-			//		isDead = true;
-			//		return true;
-			//	}
-			//	break;
-			//case Up:
-			//	if (this->Y > lineDesc->beginPoint.y && this->X > lineDesc->beginPoint.x && this->X < lineDesc->endPoint.x)
-			//	{
-			//		isDead = true;
-			//		return true;
-			//	}
-			//	break;
-			//}
 		}
 
 		//skip current player
-		if (player->figure.index == figure.index)
+		if (player->figure.index == this->figure.index)
 			continue;
-		//collisions with player
-		switch (currentDirection)
+		RECT opRect = player->GetCurrentRectNormalized();
+		if (AreRectsCollied(playerRect, opRect))
 		{
-		case Left:
-			//if()
-			break;
-		case Right:
-			break;
-		case Down:
-			break;
-		case Up:
-			break;
-		default:
-			break;
+			isDead = true;
+			return true;
 		}
 
-		isDead = false;
-		return false;
-
 	}
-
-
+	
+	isDead = false;
+	return false;
 }
