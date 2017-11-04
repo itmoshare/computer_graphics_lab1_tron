@@ -472,9 +472,19 @@ bool RandomBool(int trueChanceReduction) {
 	return (rand() > RAND_MAX / trueChanceReduction) ? false : true;
 }
 
+int afterMoveDelay = 2; // moves to wait until turn 
 void Game::ControlComputerPlayers() {
 	if (moveDelay != 0)
 		return;
+	if (afterMoveDelay != 0)
+	{
+		afterMoveDelay--;
+		return;
+	}
+	else {
+		afterMoveDelay = 2;
+	}
+	
 	for each (std::shared_ptr<Player> cplayer in computerPlayers)
 	{	
 		if (cplayer->isDead)
@@ -490,6 +500,7 @@ void Game::ControlComputerPlayers() {
 
 		GDIBitmap gdiTemp = gdiBitmaps.at(cplayer->figure.index);
 		//3 steps 
+		cplayer->Move(gdiTemp.points, false, NULL);
 		cplayer->Move(gdiTemp.points, false, NULL);
 		cplayer->Move(gdiTemp.points, false, NULL);
 
