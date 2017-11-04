@@ -94,6 +94,7 @@ public:
 	int computerPlayersCount;
     HGDIOBJ oldObject;
 	HGDIOBJ oldObject2;
+	HGDIOBJ def_font;
 
 private: 
 	void DrawBackground(int windowWidth, int WindowHeight, HDC hdc);
@@ -101,6 +102,9 @@ private:
 	void DrawSmallWall(double &x, double y, HBRUSH brush, HDC hdc);
 	void DrawBigWall(double &x, double y, HBRUSH brush, HDC hdc);
 	void InitPlayers();
+	void DrawWinGame();
+	void DrawLoseGame();
+	void SetGameoverFontSettings();
 };
 
 #endif

@@ -189,11 +189,37 @@ bool Game::IsPlayerLose() {
 	return this->player->isDead;
 }
 
-void Game::Render() {
+void Game::SetGameoverFontSettings() {
+	SetBkMode(backbufferDC, TRANSPARENT);
+	HFONT hFont = CreateFont(48, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+	def_font =  SelectObject(backbufferDC, hFont);
+}
 
+void Game::DrawWinGame() {
+	SetGameoverFontSettings();
+	std::wstring result(_T("YOU WON"));
+	DrawString(result, RGB(255, 0, 0), windowWidth / 2 - 70, windowHeight / 2);
+}
+
+void Game::DrawLoseGame() {
+	SetGameoverFontSettings();
+	std::wstring result(_T("YOU LOSE"));
+	DrawString(result, RGB(255, 0, 0), windowWidth / 2 - 70, windowHeight / 2);
+}
+
+void Game::Render() {
 	BeginGraphics();
-	MovePlayers();
 	DrawPlayers();
+	if (this->IsPlayerWin()) {
+		this->DrawWinGame();
+	}
+	else if (this->IsPlayerLose()) {
+		this->DrawLoseGame();
+	}
+	else {
+		MovePlayers();
+	}
 	EndGraphics();
 }
 
@@ -203,6 +229,7 @@ void Game::EndGraphics()
     HDC windowDC = GetDC(window);
     BitBlt(windowDC, 0, 0, windowWidth, windowHeight, backbufferDC, 0, 0, SRCCOPY);
     ReleaseDC(window, windowDC);	
+	DeleteObject(def_font);
 }
 
 void Game::FreeBitmap(Bitmap bitmap)

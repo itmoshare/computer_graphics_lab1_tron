@@ -169,13 +169,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         previousTime = currentTime;
 
         processInput(game, &msg);
-		/*if (game->IsPlayerWin())
-			DrawWinText(hwnd);
-		else if (game->IsPlayerLose())
-			DrawLoseText(hwnd);
-		else*/
-			Render();
-        //game->CheckWinningCondition();
+		Render();
 
         if (SEC_PER_UPDATE - deltaTime > 0)
             Sleep(SEC_PER_UPDATE - deltaTime);
