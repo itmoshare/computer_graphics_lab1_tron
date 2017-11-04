@@ -28,16 +28,11 @@ public:
     void DrawBitmap(Bitmap bitmap, int x, int y)  const;
     void DrawString(const std::wstring text, COLORREF color, int x, int y) const;
     void DrawPlayers() const;
-	void RemoveDeadPlayers();
     void Render();
     void EndGraphics();
-    void FreeBitmap(Bitmap bitmap);
-    void ShutdownGraphics();
 	void InitGDI(int x, int y, int index, bool revert);
 
-    void Start();
     void ProcessInput(Direction direction);    
-    void CheckWinningCondition();
 	void MovePlayers();
 	bool CheckHorizontalPath(int y, int &path_y_out);
 	bool CheckVerticalPath(int x, int &path_x_out);

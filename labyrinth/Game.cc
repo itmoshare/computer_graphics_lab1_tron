@@ -232,60 +232,9 @@ void Game::EndGraphics()
 	DeleteObject(def_font);
 }
 
-void Game::FreeBitmap(Bitmap bitmap)
-{
-    // Find the resource, from the bitmap, to free
-    //auto findResult = std::find_if(std::begin(bitmapDictionary), std::end(bitmapDictionary), [&](const std::pair<Resource, Bitmap>& pair) {
-    //    return pair.second.index == bitmap.index;
-    //});
-    //Resource foundKey;
-    //if (findResult != std::end(bitmapDictionary))
-    //{
-    //    foundKey = findResult->first;
-
-    //    // Remove file and bitmap
-    //    bitmapDictionary.erase(foundKey);
-    //    fileDictionary.erase(foundKey);
-    //}
-
-    //// fria minnet som upptas av en bitmap
-    //if (gdiBitmaps[bitmap.index].handle != 0)
-    //{
-    //    DeleteObject(gdiBitmaps[bitmap.index].handle);
-    //    gdiBitmaps[bitmap.index].handle = 0;
-    //}
-}
-
-void Game::ShutdownGraphics()
-{
-    for (auto& bm : bitmaps) {
-        FreeBitmap(bm);
-    }
-
-    // fria alla resurser som anvönds av grafiksystemet
-    DeleteDC(this->bitmapDC);
-
-    DeleteObject(this->backbufferBitmap);
-    SelectObject(this->backbufferDC, oldObject);
-    DeleteDC(this->backbufferDC);
-}
 
 void Game::InitGDI(int x, int y, int index, bool revert) {
 	GDIBitmap gdi = gdiBitmaps.at(index);
-	/*gdi.points[0] = { 317, 457 };
-	gdi.points[1] = { 317, 477 };
-	gdi.points[2] = { 271, 457 };*/
-	//player->Y = path_ys[7] - (WindowOption::PATH_WIDTH / 2);
-	//gdi.points[0] = { player->X, player->Y };
-	////gdi.points[0] = { WindowOption::BORDER_WIDTH + WindowOption::PLAYER_HEIGHT, WindowOption::BORDER_WIDTH };
-
-	//gdi.points[1] = { player->X, player->Y + WindowOption::PLAYER_WIDTH };
-	//gdi.points[2] = { player->X - WindowOption::PLAYER_HEIGHT, player->Y };//lowerleft
-
-	/*gdi.points[1] = { WindowOption::BORDER_WIDTH + WindowOption::PLAYER_HEIGHT,
-		WindowOption::BORDER_WIDTH + WindowOption::PLAYER_WIDTH };
-
-	gdi.points[2] = { WindowOption::BORDER_WIDTH , WindowOption::BORDER_WIDTH };*/
 	if (!revert) {
 		gdi.points[0] = { x, y };
 		gdi.points[1] = { x + gdi.width, y };
@@ -345,16 +294,6 @@ void Game::InitPlayers() {
 		this->allPlayers.push_back(cplayer);
 	}
 
-}
-
-// Start game
-void Game::Start() {
-    /*int startPosition = find(currentLevel->tiles.begin(), currentLevel->tiles.end(), Resource::StartTile) - this->levels[0]->tiles.begin();
-    int x = startPosition % currentLevel->TILES_PER_COLUMN;
-    int y = startPosition / currentLevel->TILES_PER_COLUMN;
-    player->x = x * WindowOption::TILE_WIDTH;
-    player->y = y * WindowOption::TILE_HEIGHT;
-    score = 0;*/
 }
 
 bool Game::CheckHorizontalPath(int y, int &path_y_out) {
@@ -526,23 +465,4 @@ void Game::ProcessInput(Direction direction) {
 	gdiBitmaps[player->figure.index] = gdBmp;
 
 	// TurnPlayerNoWalls(direction, &*player);
-}
-
-void Game::CheckWinningCondition() {
-    /*int x = (int)player->x / WindowOption::TILE_WIDTH;
-    int y = (int)player->y / WindowOption::TILE_HEIGHT;
-    auto position = x + (y * currentLevel->TILES_PER_COLUMN);
-    auto tile = currentLevel->tiles[position];
-    if (tile == Resource::EndTile) {
-        std::wstring finishText(_T("You found the exit "));
-        finishText += std::to_wstring(score);
-        finishText += std::wstring(_T(" in steps!\r\n"));
-        finishText += std::wstring(_T("Would you like to play again?"));
-        if (MessageBox(this->window, finishText.c_str(), _T("Freedom at last"), MB_YESNO) == IDYES) {
-            Start();
-        }
-        else {
-            exit(1);
-        }
-    }*/
 }

@@ -24,8 +24,6 @@ std::weak_ptr<Game> wGame;
 HMENU CreateMainMenu()
 {
     HMENU file = CreateMenu();
-    AppendMenu(file, MF_STRING, ID_OPEN, _T("&New"));
-    AppendMenu(file, MF_SEPARATOR, 0, 0);
     AppendMenu(file, MF_STRING, ID_QUIT, _T("&Quit"));
 
     HMENU help = CreateMenu();
@@ -53,9 +51,6 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             std::wstring about(   _T("Tron is legendary game. Bad copy made by Шумеев А.А. гр. Р3418 \r\n"));
             MessageBox(hwnd, about.c_str(), _T("About tron"), MB_OK);
         }
-            break;
-        case ID_OPEN:
-           // game->Start();
             break;
         }
         break;
