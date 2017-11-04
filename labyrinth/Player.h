@@ -34,7 +34,7 @@ public:
 	void ReduceSpeed();
 	void UpSpeed();
 	bool CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers, HDC hdc);
-	void Move(LPPOINT points, HDC hdc);
+	void Move(LPPOINT points, bool drawTrack, HDC hdc);
 	RECT GetCurrentRectNormalized();
 	bool IsCollizedWithPlayerRect(RECT rect);
 

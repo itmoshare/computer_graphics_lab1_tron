@@ -114,7 +114,7 @@ void Player::DrawTrack(HDC hdc, int length) {
 	
 }
 
-void Player::Move(LPPOINT points, HDC hdc) {
+void Player::Move(LPPOINT points, bool drawTrack, HDC hdc) {
 	int stepLength = 1;
 	int change = stepLength * speed;
 	switch (currentDirection)
@@ -141,7 +141,8 @@ void Player::Move(LPPOINT points, HDC hdc) {
 		break;
 	}
 	points[0] = { this->X, this->Y };
-	DrawTrack(hdc, change);
+	if(drawTrack)
+		DrawTrack(hdc, change);
 }
 
 void Player::ReduceSpeed() {
@@ -179,7 +180,7 @@ void Player::Turn(LPPOINT points, Direction direction, HDC hdc) {
 			this->Y += WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH + 3;
 		}
 		else { //down
-			this->X -= WindowOption::PLAYER_HEIGHT + WindowOption::PATH_WIDTH / 2 + 2;// -3 * WindowOption::PATH_WIDTH / 2 + 2;
+			this->X -= WindowOption::PLAYER_HEIGHT +3 * WindowOption::PATH_WIDTH / 2 -2;// -3 * WindowOption::PATH_WIDTH / 2 + 2;
 			this->Y -= WindowOption::PLAYER_HEIGHT - WindowOption::PATH_WIDTH / 2 - 2;
 		}
 

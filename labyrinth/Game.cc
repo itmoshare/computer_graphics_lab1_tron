@@ -161,7 +161,7 @@ void Game::MovePlayers() {
 		{
 			if (!allPlayers[i]->isDead) {
 				GDIBitmap gdi = gdiBitmaps.at(allPlayers[i]->figure.index);
-				allPlayers[i]->Move(gdi.points, backgroundBufferDC);
+				allPlayers[i]->Move(gdi.points, true, backgroundBufferDC);
 				gdiBitmaps[allPlayers[i]->figure.index] = gdi;
 				allPlayers[i]->CheckIsDead(allPlayers, backgroundBufferDC);
 			}
@@ -218,6 +218,7 @@ void Game::Render() {
 		this->DrawLoseGame();
 	}
 	else {
+		ControlComputerPlayers();
 		MovePlayers();
 	}
 	EndGraphics();
@@ -465,4 +466,62 @@ void Game::ProcessInput(Direction direction) {
 	gdiBitmaps[player->figure.index] = gdBmp;
 
 	// TurnPlayerNoWalls(direction, &*player);
+}
+
+bool RandomBool(int trueChanceReduction) {
+	return (rand() > RAND_MAX / trueChanceReduction) ? false : true;
+}
+
+void Game::ControlComputerPlayers() {
+	if (moveDelay != 0)
+		return;
+	for each (std::shared_ptr<Player> cplayer in computerPlayers)
+	{	
+		if (cplayer->isDead)
+			continue;
+
+		bool increaseSpeed = RandomBool(200);
+		if (increaseSpeed)
+			cplayer->speed += 1;
+
+		//move player to see if it will be dead. if yes, turn
+		int cx = cplayer->X;
+		int cy = cplayer->Y;//save current pos
+
+		GDIBitmap gdiTemp = gdiBitmaps.at(cplayer->figure.index);
+		//3 steps 
+		cplayer->Move(gdiTemp.points, false, NULL);
+		cplayer->Move(gdiTemp.points, false, NULL);
+
+		bool needToTurn = cplayer->CheckIsDead(allPlayers, backbufferDC);
+
+		//restore position etc
+		cplayer->X = cx;
+		cplayer->Y = cy;
+		cplayer->isDead = false;
+
+		if (needToTurn)
+		{		
+			Direction d1, d2;
+			switch (cplayer->currentDirection)
+			{
+			case Left:
+			case Right:
+				d1 = Direction::Up;
+				d2 = Direction::Down;
+				break;
+			case Up:
+			case Down:
+				d1 = Direction::Left;
+				d2 = Direction::Right;
+				break;
+			}
+
+			Direction randomDirection = static_cast<Direction>((rand() > RAND_MAX / 2) ? d1 : d2);
+
+			GDIBitmap gdBmp = gdiBitmaps.at(cplayer->figure.index);
+			cplayer->Turn(gdBmp.points, randomDirection, backgroundBufferDC);
+			gdiBitmaps[cplayer->figure.index] = gdBmp;
+		}
+	}
 }

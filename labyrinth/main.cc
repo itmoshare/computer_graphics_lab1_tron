@@ -48,7 +48,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
             break;
         case ID_ABOUT: {
-            std::wstring about(   _T("Tron is legendary game. Bad copy made by Шумеев А.А. гр. Р3418 \r\n"));
+            std::wstring about(   _T("Tron made by Шумеев А.А. гр. Р3418 \r\n"));
             MessageBox(hwnd, about.c_str(), _T("About tron"), MB_OK);
         }
             break;

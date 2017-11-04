@@ -100,6 +100,7 @@ private:
 	void DrawWinGame();
 	void DrawLoseGame();
 	void SetGameoverFontSettings();
+	void ControlComputerPlayers();
 };
 
 #endif
