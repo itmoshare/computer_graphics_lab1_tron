@@ -18,7 +18,7 @@ Player::Player(Bitmap figure, HBRUSH trackBrush, int x, int y, RECT field) {
 	this->afterTurn = false;
 }
 
-void Player::DrawTrack(HDC hdc, int length) {
+void Player::DrawTrack(std::shared_ptr<MemoryDrawer> drawer, int length) {
 	RECT newTrackRect;
 	int rectLeft;
 	int rectTop;
@@ -109,12 +109,12 @@ void Player::DrawTrack(HDC hdc, int length) {
 
 			break;
 	}
-	FillRect(hdc, &newTrackRect, trackBrush);
+	drawer->DrawBackgroundRect(newTrackRect, trackBrush);
 	afterTurn = false;
 	
 }
 
-void Player::Move(LPPOINT points, bool drawTrack, HDC hdc) {
+void Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<MemoryDrawer> drawer) {
 	int stepLength = 1;
 	int change = stepLength * speed;
 	switch (currentDirection)
@@ -142,7 +142,7 @@ void Player::Move(LPPOINT points, bool drawTrack, HDC hdc) {
 	}
 	points[0] = { this->X, this->Y };
 	if(drawTrack)
-		DrawTrack(hdc, change);
+		DrawTrack(drawer, change);
 }
 
 void Player::ReduceSpeed() {
@@ -169,7 +169,7 @@ bool Player::IsOpositeDirection(Direction direction) {
 	}
 }
 
-void Player::Turn(LPPOINT points, Direction direction, HDC hdc) {
+void Player::Turn(LPPOINT points, Direction direction) {
 	if (direction == currentDirection || IsOpositeDirection(direction))
 		return;
 	switch (direction)
@@ -301,7 +301,7 @@ bool AreRectsCollied(RECT rect1, RECT rect2) {
 		(rect1.top < rect2.bottom) && (rect1.bottom > rect2.top);
 }
 
-bool Player::CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers, HDC hdc) {
+bool Player::CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers) {
 
 	
 	//border collissions
@@ -324,8 +324,6 @@ bool Player::CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers, HDC hd
 			
 			if (IsLineCrossedRect(playerRect, lineDesc))
 			{
-				RECT rect = { lineDesc->beginPoint.x - 2, lineDesc->beginPoint.y, lineDesc->endPoint.x, lineDesc->endPoint.y };
-				FillRect(hdc, &rect, CreateSolidBrush(RGB(255, 0, 0)));
 				isDead = true;
 				return true;
 			}

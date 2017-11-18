@@ -14,6 +14,7 @@
 #include "WindowOptions.h"
 #include "Direction.h"
 #include "Bitmap.h"
+#include "MemoryDrawer.h"
 
 class Player
 {
@@ -30,11 +31,11 @@ public:
 	};
 
 
-	void Turn(LPPOINT points, Direction direction, HDC hdc);
+	void Turn(LPPOINT points, Direction direction);
 	void ReduceSpeed();
 	void UpSpeed();
-	bool CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers, HDC hdc);
-	void Move(LPPOINT points, bool drawTrack, HDC hdc);
+	bool CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers);
+	void Move(LPPOINT points, bool drawTrack, std::shared_ptr<MemoryDrawer> drawer);
 	RECT GetCurrentRectNormalized();
 	bool IsCollizedWithPlayerRect(RECT rect);
 
@@ -54,7 +55,7 @@ public:
 	bool afterTurn;
 
 private:
-	void DrawTrack(HDC hdc, int length);
+	void DrawTrack(std::shared_ptr<MemoryDrawer> drawer, int length);
 
 	HBRUSH trackBrush;
 };

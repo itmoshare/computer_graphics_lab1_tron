@@ -26,26 +26,26 @@ bool Game::LoadBitmapFromFile(const std::wstring filename, std::string resourceN
     return true;
 }
 
-void Game::DrawWall(double x, double y, double width, double height, HBRUSH brush, HDC hdc) {
+void Game::DrawWall(double x, double y, double width, double height, HBRUSH brush) {
 	RECT wall = { x, y, x + width, y + height };
-	FillRect(hdc, &wall, brush);
+	memDrawer->DrawBackgroundRect(wall, brush);
 	walls.push_back(wall);
 }
 
-void Game::DrawSmallWall(double &x, double y, HBRUSH brush, HDC hdc) {
-	Game::DrawWall(x, y, WindowOption::SMALL_WALL_WIDTH, WindowOption::WALL_HEIGHT, brush, hdc);
+void Game::DrawSmallWall(double &x, double y, HBRUSH brush) {
+	Game::DrawWall(x, y, WindowOption::SMALL_WALL_WIDTH, WindowOption::WALL_HEIGHT, brush);
 	x += WindowOption::SMALL_WALL_WIDTH;
 }
-void Game::DrawBigWall(double &x, double y, HBRUSH brush, HDC hdc) {
-	Game::DrawWall(x, y, WindowOption::WALL_WIDTH, WindowOption::WALL_HEIGHT, brush, hdc);
+void Game::DrawBigWall(double &x, double y, HBRUSH brush) {
+	Game::DrawWall(x, y, WindowOption::WALL_WIDTH, WindowOption::WALL_HEIGHT, brush);
 	x += WindowOption::WALL_WIDTH;
 }
 
-void Game::DrawBackground(int windowWidth, int WindowHeight, HDC hdc) {
+void Game::DrawBackground(int windowWidth, int WindowHeight) {
 	//black background
 	RECT backRect = { 0, 0, windowWidth, windowHeight };
 	HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
-	FillRect(hdc, &backRect, blackBrush);
+	memDrawer->DrawBackgroundRect(backRect, blackBrush);
 
 	//Draw border
 	RECT borderUpRect = { 0, 0, windowWidth, WindowOption::BORDER_WIDTH };
@@ -53,10 +53,10 @@ void Game::DrawBackground(int windowWidth, int WindowHeight, HDC hdc) {
 	RECT borderLeftRect = { 0, 0, WindowOption::BORDER_WIDTH, windowHeight };
 	RECT borderRightRect = { windowWidth - WindowOption::BORDER_WIDTH, 0, windowWidth, windowHeight };
 	HBRUSH borderBrush = CreateSolidBrush(RGB(91, 120, 125));
-	FillRect(hdc, &borderUpRect, borderBrush);
-	FillRect(hdc, &borderDownRect, borderBrush);
-	FillRect(hdc, &borderLeftRect, borderBrush);
-	FillRect(hdc, &borderRightRect, borderBrush);
+	memDrawer->DrawBackgroundRect(borderUpRect, borderBrush);
+	memDrawer->DrawBackgroundRect(borderDownRect, borderBrush);
+	memDrawer->DrawBackgroundRect(borderLeftRect, borderBrush);
+	memDrawer->DrawBackgroundRect(borderRightRect, borderBrush);
 
 
 	//Draw walls
@@ -64,18 +64,18 @@ void Game::DrawBackground(int windowWidth, int WindowHeight, HDC hdc) {
 	double currentX = WindowOption::BORDER_WIDTH;
 	double currentY = WindowOption::BORDER_WIDTH;
 	for (int i = 0; i < WindowOption::VERTICALL_WALL_COUNT; i++) {
-		Game::DrawSmallWall(currentX, currentY, wallBrush, hdc);
+		Game::DrawSmallWall(currentX, currentY, wallBrush);
 		if (i == 0)
 			path_xs.push_back(currentX);
 		currentX += WindowOption::PATH_WIDTH;
 		for (int j = 0; j < WindowOption::VERTICALL_WALL_COUNT; j++)
 		{
-			DrawBigWall(currentX, currentY, wallBrush, hdc);
+			DrawBigWall(currentX, currentY, wallBrush);
 			if (i == 0)
 				path_xs.push_back(currentX);
 			currentX += WindowOption::PATH_WIDTH;
 		}
-		Game::DrawSmallWall(currentX, currentY, wallBrush, hdc);
+		Game::DrawSmallWall(currentX, currentY, wallBrush);
 		//Line drawn
 		if (i != WindowOption::VERTICALL_WALL_COUNT - 1) {
 			currentY += WindowOption::WALL_HEIGHT;
@@ -92,7 +92,7 @@ void Game::InitializeGraphics(HWND window)
 {
     this->window = window;
 
-    HDC hdc = GetDC(this->window);
+	memDrawer = std::make_shared<MemoryDrawer>();
    
     RECT windowSize = { 0 };
     windowSize = WindowOption::MAP_CANVAS_RECT;
@@ -103,26 +103,16 @@ void Game::InitializeGraphics(HWND window)
     windowWidth = clientRect.right - clientRect.left;
     windowHeight = clientRect.bottom - clientRect.top;
 	
-	//save drawn background to not redraw it everytime
-	backgroundBufferDC = CreateCompatibleDC(hdc);
-	backgroundBufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
-	oldObject2 = SelectObject(backgroundBufferDC, backgroundBufferBitmap);
+	memDrawer->OnInitializeGraphice(window, windowWidth, windowHeight);
 
-	// Double buffering
-	backbufferDC = CreateCompatibleDC(hdc);
-	backbufferBitmap = CreateCompatibleBitmap(hdc, windowWidth, windowHeight);
-	oldObject = SelectObject(backbufferDC, backbufferBitmap);
+	DrawBackground(windowWidth, windowHeight);
 
-	DrawBackground(windowWidth, windowHeight, backgroundBufferDC);
-
-	bitmapDC = CreateCompatibleDC(backgroundBufferDC);
 
 	Game::InitPlayers();
 }
 
 void Game::BeginGraphics() {
-	//copy drawn background to bufferdc
-	BitBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0, SRCCOPY);
+	memDrawer->OnBeginGraphics();
 }
 
 
@@ -130,24 +120,20 @@ void Game::BeginGraphics() {
 void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
-    SelectObject(bitmapDC, gdi.handle);
-    //BitBlt(backbufferDC, x, y, gdi.width, gdi.height, bitmapDC, 0, 0, SRCCOPY);
-	
-	
-	bool a = PlgBlt(backbufferDC, gdi.points, bitmapDC, 0, 0, gdi.width, gdi.height, NULL, 0, 0);
+    
+	memDrawer->DrawGdi(gdi);
 }
 
 void Game::DrawString(const std::wstring text, COLORREF color, int x, int y) const
 {
-    SetTextColor(backbufferDC, color);
-    TextOut(backbufferDC, x, y, text.c_str(), text.size());
+	memDrawer->DrawString(text, color, x, y);
 }
 
 void Game::DrawPlayers() const {
 	
 	for (int i = 0; i < allPlayers.size(); i++)
 	{
-		DrawBitmap(allPlayers[i]->figure, allPlayers[i]->X, allPlayers[i]->Y);
+		this->DrawBitmap(allPlayers[i]->figure, allPlayers[i]->X, allPlayers[i]->Y);
 	}
 }
 
@@ -161,9 +147,9 @@ void Game::MovePlayers() {
 		{
 			if (!allPlayers[i]->isDead) {
 				GDIBitmap gdi = gdiBitmaps.at(allPlayers[i]->figure.index);
-				allPlayers[i]->Move(gdi.points, true, backgroundBufferDC);
+				allPlayers[i]->Move(gdi.points, true, memDrawer);
 				gdiBitmaps[allPlayers[i]->figure.index] = gdi;
-				allPlayers[i]->CheckIsDead(allPlayers, backgroundBufferDC);
+				allPlayers[i]->CheckIsDead(allPlayers);
 			}
 			else {
 				int a = 3;
@@ -189,23 +175,15 @@ bool Game::IsPlayerLose() {
 	return this->player->isDead;
 }
 
-void Game::SetGameoverFontSettings() {
-	SetBkMode(backbufferDC, TRANSPARENT);
-	HFONT hFont = CreateFont(48, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
-	def_font =  SelectObject(backbufferDC, hFont);
-}
+
 
 void Game::DrawWinGame() {
-	SetGameoverFontSettings();
-	std::wstring result(_T("YOU WON"));
-	DrawString(result, RGB(255, 0, 0), windowWidth / 2 - 70, windowHeight / 2);
+
+	memDrawer->DrawWinGame();
 }
 
 void Game::DrawLoseGame() {
-	SetGameoverFontSettings();
-	std::wstring result(_T("YOU LOSE"));
-	DrawString(result, RGB(255, 0, 0), windowWidth / 2 - 70, windowHeight / 2);
+	memDrawer->DrawLoseGame();     
 }
 
 void Game::Render() {
@@ -226,11 +204,7 @@ void Game::Render() {
 
 void Game::EndGraphics()
 {
-    // Blit-block transfer to the main device context
-    HDC windowDC = GetDC(window);
-    BitBlt(windowDC, 0, 0, windowWidth, windowHeight, backbufferDC, 0, 0, SRCCOPY);
-    ReleaseDC(window, windowDC);	
-	DeleteObject(def_font);
+	memDrawer->OnEndGraphics();
 }
 
 
@@ -462,7 +436,7 @@ void Game::ProcessInput(Direction direction) {
 	}
 	
 	GDIBitmap gdBmp = gdiBitmaps.at(player->figure.index);
-	this->player->Turn(gdBmp.points, direction, backgroundBufferDC);
+	this->player->Turn(gdBmp.points, direction);
 	gdiBitmaps[player->figure.index] = gdBmp;
 
 	// TurnPlayerNoWalls(direction, &*player);
@@ -504,7 +478,7 @@ void Game::ControlComputerPlayers() {
 		cplayer->Move(gdiTemp.points, false, NULL);
 		cplayer->Move(gdiTemp.points, false, NULL);
 
-		bool needToTurn = cplayer->CheckIsDead(allPlayers, backbufferDC);
+		bool needToTurn = cplayer->CheckIsDead(allPlayers);
 
 		//restore position etc
 		cplayer->X = cx;
@@ -531,7 +505,7 @@ void Game::ControlComputerPlayers() {
 			Direction randomDirection = static_cast<Direction>((rand() > RAND_MAX / 2) ? d1 : d2);
 
 			GDIBitmap gdBmp = gdiBitmaps.at(cplayer->figure.index);
-			cplayer->Turn(gdBmp.points, randomDirection, backgroundBufferDC);
+			cplayer->Turn(gdBmp.points, randomDirection);
 			gdiBitmaps[cplayer->figure.index] = gdBmp;
 		}
 	}

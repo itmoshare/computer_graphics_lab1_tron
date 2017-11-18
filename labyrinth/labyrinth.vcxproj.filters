@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\Drawers">
+      <UniqueIdentifier>{3e51bd82-ec01-48a5-aa03-5638126099ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Drawers">
+      <UniqueIdentifier>{d120a435-6c12-40a7-a490-2ab767678428}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cc">
@@ -26,6 +32,9 @@
     </ClCompile>
     <ClCompile Include="Game.cc">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryDrawer.cpp">
+      <Filter>Source Files\Drawers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -42,6 +51,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Direction.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryDrawer.h">
+      <Filter>Header Files\Drawers</Filter>
+    </ClInclude>
+    <ClInclude Include="GDIBitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

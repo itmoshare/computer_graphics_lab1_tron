@@ -15,6 +15,8 @@
 #include "WindowOptions.h"
 #include "Bitmap.h"
 #include "Player.h"
+#include "MemoryDrawer.h"
+#include "GDIBitmap.h"
 
 
 class Game {
@@ -48,27 +50,12 @@ public:
     int windowWidth;
     int windowHeight;
 
-    HDC backbufferDC;
-    HBITMAP backbufferBitmap;
+   
 
-	HDC backgroundBufferDC;
-	HBITMAP backgroundBufferBitmap;
-
-    HDC bitmapDC;
-
-    struct GDIBitmap
-    {
-        HBITMAP handle;
-        int width;
-        int height;
-		POINT points[3];
-
-        GDIBitmap()
-            : handle(0)
-        {
-        }
-    };
+   
     // EOF GDI
+
+	std::shared_ptr<MemoryDrawer> memDrawer;
 
 	std::shared_ptr<Player> player;
 	std::vector<std::shared_ptr<Player>> computerPlayers;
@@ -87,15 +74,13 @@ public:
     Bitmap playerBitmap;
     int score;
 	int computerPlayersCount;
-    HGDIOBJ oldObject;
-	HGDIOBJ oldObject2;
-	HGDIOBJ def_font;
+   
 
 private: 
-	void DrawBackground(int windowWidth, int WindowHeight, HDC hdc);
-	void DrawWall(double x, double y, double width, double height, HBRUSH brush, HDC hdc);
-	void DrawSmallWall(double &x, double y, HBRUSH brush, HDC hdc);
-	void DrawBigWall(double &x, double y, HBRUSH brush, HDC hdc);
+	void DrawBackground(int windowWidth, int WindowHeight);
+	void DrawWall(double x, double y, double width, double height, HBRUSH brush);
+	void DrawSmallWall(double &x, double y, HBRUSH brus);
+	void DrawBigWall(double &x, double y, HBRUSH brush);
 	void InitPlayers();
 	void DrawWinGame();
 	void DrawLoseGame();
