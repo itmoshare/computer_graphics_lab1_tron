@@ -45,7 +45,7 @@ void Game::DrawBackground(int windowWidth, int WindowHeight) {
 	//black background
 	RECT backRect = { 0, 0, windowWidth, windowHeight };
 	HBRUSH blackBrush = CreateSolidBrush(RGB(0, 0, 0));
-	memDrawer->DrawBackgroundRect(backRect, blackBrush);
+	//memDrawer->DrawBackgroundRect(backRect, blackBrush);
 
 	//Draw border
 	RECT borderUpRect = { 0, 0, windowWidth, WindowOption::BORDER_WIDTH };
@@ -92,7 +92,7 @@ void Game::InitializeGraphics(HWND window)
 {
     this->window = window;
 
-	memDrawer = std::make_shared<MemoryDrawer>();
+	memDrawer = std::make_shared<OpenGlDrawer>();
    
     RECT windowSize = { 0 };
     windowSize = WindowOption::MAP_CANVAS_RECT;

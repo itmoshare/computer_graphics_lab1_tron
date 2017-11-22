@@ -15,6 +15,7 @@
 #include "Direction.h"
 #include "Bitmap.h"
 #include "MemoryDrawer.h"
+#include "OpenGLDrawer.h"
 
 class Player
 {
@@ -35,7 +36,7 @@ public:
 	void ReduceSpeed();
 	void UpSpeed();
 	bool CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers);
-	void Move(LPPOINT points, bool drawTrack, std::shared_ptr<MemoryDrawer> drawer);
+	void Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer);
 	RECT GetCurrentRectNormalized();
 	bool IsCollizedWithPlayerRect(RECT rect);
 
@@ -55,7 +56,7 @@ public:
 	bool afterTurn;
 
 private:
-	void DrawTrack(std::shared_ptr<MemoryDrawer> drawer, int length);
+	void DrawTrack(std::shared_ptr<OpenGlDrawer> drawer, int length);
 
 	HBRUSH trackBrush;
 };

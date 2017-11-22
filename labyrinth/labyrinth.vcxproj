@@ -59,6 +59,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>opengl32.lib;glut32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -83,6 +84,7 @@
     <ClCompile Include="Game.cc" />
     <ClCompile Include="main.cc" />
     <ClCompile Include="MemoryDrawer.cpp" />
+    <ClCompile Include="OpenGLDrawer.cpp" />
     <ClCompile Include="Player.cc" />
     <ClCompile Include="WindowOptions.cc" />
   </ItemGroup>
@@ -92,6 +94,7 @@
     <ClInclude Include="Game.h" />
     <ClInclude Include="GDIBitmap.h" />
     <ClInclude Include="MemoryDrawer.h" />
+    <ClInclude Include="OpenGLDrawer.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="WindowOptions.h" />
   </ItemGroup>

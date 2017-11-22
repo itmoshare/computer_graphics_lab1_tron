@@ -17,7 +17,7 @@
 #include "Player.h"
 #include "MemoryDrawer.h"
 #include "GDIBitmap.h"
-
+#include "OpenGLDrawer.h"
 
 class Game {
 public:
@@ -55,7 +55,7 @@ public:
    
     // EOF GDI
 
-	std::shared_ptr<MemoryDrawer> memDrawer;
+	std::shared_ptr<OpenGlDrawer> memDrawer;
 
 	std::shared_ptr<Player> player;
 	std::vector<std::shared_ptr<Player>> computerPlayers;

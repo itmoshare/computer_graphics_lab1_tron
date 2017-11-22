@@ -122,6 +122,31 @@ void DrawWinText(HWND hwnd) {
 	ShowString(message, hwnd);
 }
 
+bool AnimateNextFrame(int desiredFrameRate)
+{
+	static double lastTime = 0.0f;
+	double elapsedTime = 0.0;
+
+	// Get current time in seconds  (milliseconds * .001 = seconds)
+	double currentTime = GetTickCount() * 0.001;
+
+	// Get the elapsed time by subtracting the current time from the last time
+	elapsedTime = currentTime - lastTime;
+
+	// Check if the time since we last checked is over (1 second / framesPerSecond)
+	if (elapsedTime > (1.0 / desiredFrameRate))
+	{
+		// Reset the last time
+		lastTime = currentTime;
+
+		// Return TRUE, to animate the next frame of animation
+		return true;
+	}
+
+	// We don't animate right now.
+	return false;
+}
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
     wchar_t className[] = _T("TronClass");
     wchar_t windowName[] = _T("Tron");
@@ -136,7 +161,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindow(
         className,
         windowName,
-		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX,
+		WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
         WindowOption::StartPositionX, WindowOption::StartPositionY,
         WindowOption::WIDTH, WindowOption::HEIGHT,
         NULL,
@@ -150,24 +175,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     game = std::make_shared<Game>();
     game->InitializeGraphics(hwnd);
 
-    MSG msg = { 0 };
-
-    const double FRAMES_PER_SEC = 60.0;
-    const double SEC_PER_UPDATE = 1.0 / FRAMES_PER_SEC;
-
-    auto previousTime = WindowOption::clock.now();
-    double lag = 0.0;
+	MSG msg;
     while (WindowOption::IsRunning) {
 
-        auto currentTime = WindowOption::clock.now();
-        auto deltaTime = std::chrono::duration_cast<std::chrono::duration<double>>(currentTime - previousTime).count();
-        previousTime = currentTime;
-
-        processInput(game, &msg);
+       
 		Render();
-
-        if (SEC_PER_UPDATE - deltaTime > 0)
-            Sleep(SEC_PER_UPDATE - deltaTime);
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
+			if (msg.message == WM_QUIT)					// If the message wasn't to quit
+				break;
+			TranslateMessage(&msg);						// Find out what the message does
+			DispatchMessage(&msg);						// Execute the message
+		}
+		else											// if there wasn't a message
+		{
+			if (AnimateNextFrame(60))					// Make sure we only animate 60 FPS
+			{
+				Render();							// Render the scene every frame
+			}
+			else
+			{
+				Sleep(1);								// Let other processes work
+			}
+		}
     }
 
     return msg.wParam;

@@ -18,7 +18,7 @@ Player::Player(Bitmap figure, HBRUSH trackBrush, int x, int y, RECT field) {
 	this->afterTurn = false;
 }
 
-void Player::DrawTrack(std::shared_ptr<MemoryDrawer> drawer, int length) {
+void Player::DrawTrack(std::shared_ptr<OpenGlDrawer> drawer, int length) {
 	RECT newTrackRect;
 	int rectLeft;
 	int rectTop;
@@ -109,12 +109,12 @@ void Player::DrawTrack(std::shared_ptr<MemoryDrawer> drawer, int length) {
 
 			break;
 	}
-	drawer->DrawBackgroundRect(newTrackRect, trackBrush);
+	//drawer->DrawBackgroundRect(newTrackRect, trackBrush);
 	afterTurn = false;
 	
 }
 
-void Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<MemoryDrawer> drawer) {
+void Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer) {
 	int stepLength = 1;
 	int change = stepLength * speed;
 	switch (currentDirection)

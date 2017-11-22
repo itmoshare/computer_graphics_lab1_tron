@@ -36,6 +36,9 @@
     <ClCompile Include="MemoryDrawer.cpp">
       <Filter>Source Files\Drawers</Filter>
     </ClCompile>
+    <ClCompile Include="OpenGLDrawer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="WindowOptions.h">
@@ -57,6 +60,9 @@
       <Filter>Header Files\Drawers</Filter>
     </ClInclude>
     <ClInclude Include="GDIBitmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OpenGLDrawer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
