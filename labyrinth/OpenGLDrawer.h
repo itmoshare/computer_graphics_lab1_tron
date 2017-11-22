@@ -14,7 +14,7 @@
 #include <map>
 #include <gl\gl.h>										// Header File For The OpenGL32 Library
 #include <gl\glu.h>										// Header File For The GLu32 Library
-
+#include <glut.h>
 
 #include "WindowOptions.h"
 #include "Bitmap.h"
@@ -27,8 +27,8 @@ public:
 	void OnInitializeGraphice(HWND window, int windowWidth, int windowHeight);
 	void OnBeginGraphics();
 	void OnEndGraphics();
-	void DrawGdi(GDIBitmap gdi);
-	void DrawString(const std::wstring text, COLORREF color, int x, int y) const;
+	void DrawGdi(GDIBitmap gdi, bool player);
+	void DrawString(const char * text) const;
 
 	void SizeOpenGLScreen(int width, int height);
 
@@ -41,9 +41,13 @@ public:
 
 	void InitializeOpenGL(LONG width, LONG height);
 
+	void CreateTextures(HBITMAP palyer, HBITMAP computerPlayer);
+
 	int windowWidth;
 	int windowHeight;
 
+
+	UINT g_Texture[2];
 	HDC defaultHdc;
 
 	HWND window;
@@ -69,8 +73,8 @@ public:
 	HGLRC g_hRC;											// General OpenGL_DC - Our Rendering Context for OpenGL
 	HINSTANCE g_hInstance;								// This holds our window hInstance
 
-
-
+	GLuint texturePlayer;
+	GLuint textureComputePlayer;
 	//temp
 
 	UINT CreateOpenGL3DFont(LPSTR strFontName, float extrude);

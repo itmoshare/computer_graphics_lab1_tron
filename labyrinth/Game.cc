@@ -4,7 +4,7 @@ bool Game::LoadBitmapFromFile(const std::wstring filename, std::string resourceN
 {
     Bitmap bitmap;
     GDIBitmap gdi;
-    gdi.handle = (HBITMAP)LoadImage(0, filename.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+    gdi.handle = (HBITMAP)LoadImage(0, filename.c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE | LR_CREATEDIBSECTION);
     if (gdi.handle == 0)
     {
         return false;
@@ -104,11 +104,13 @@ void Game::InitializeGraphics(HWND window)
     windowHeight = clientRect.bottom - clientRect.top;
 	
 	memDrawer->OnInitializeGraphice(window, windowWidth, windowHeight);
-
+	
 	DrawBackground(windowWidth, windowHeight);
 
 
 	Game::InitPlayers();
+	//comment when memory drawer
+	memDrawer->CreateTextures(gdiBitmaps.at(0).handle, gdiBitmaps.at(1).handle);
 }
 
 void Game::BeginGraphics() {
@@ -120,14 +122,11 @@ void Game::BeginGraphics() {
 void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
-    
-	memDrawer->DrawGdi(gdi);
+	bool isPlayer = bitmap.index == 0;
+	memDrawer->DrawGdi(gdi, isPlayer);
 }
 
-void Game::DrawString(const std::wstring text, COLORREF color, int x, int y) const
-{
-	memDrawer->DrawString(text, color, x, y);
-}
+
 
 void Game::DrawPlayers() const {
 	
@@ -226,7 +225,7 @@ void Game::InitGDI(int x, int y, int index, bool revert) {
 
 void Game::InitPlayers() {
 	//human player
-	LoadBitmapFromFile(std::wstring(_T("tron_player.bmp")), "player");
+	LoadBitmapFromFile(std::wstring(_T("tron_player2.bmp")), "player");
 
 	RECT fieldRect = { WindowOption::BORDER_WIDTH, WindowOption::BORDER_WIDTH, windowWidth - WindowOption::BORDER_WIDTH, windowHeight - WindowOption::BORDER_WIDTH };
 
@@ -248,7 +247,7 @@ void Game::InitPlayers() {
 	int positionDiff = 0;
 	int cplayerY = WindowOption::BORDER_WIDTH;
 	for (int i = 0; i < count; i++) {
-		LoadBitmapFromFile(std::wstring(_T("computer_player.bmp")), "computerPlayer" + std::to_string(i));
+		LoadBitmapFromFile(std::wstring(_T("computer_player2.bmp")), "computerPlayer" + std::to_string(i));
 		
 		if (i % 2 == 0) {
 			positionDiff = -positionDiff;

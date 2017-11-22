@@ -109,7 +109,7 @@ void Player::DrawTrack(std::shared_ptr<OpenGlDrawer> drawer, int length) {
 
 			break;
 	}
-	//drawer->DrawBackgroundRect(newTrackRect, trackBrush);
+	drawer->DrawBackgroundRect(newTrackRect, trackBrush);
 	afterTurn = false;
 	
 }

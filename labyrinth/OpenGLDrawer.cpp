@@ -10,7 +10,7 @@ void OpenGlDrawer::OnInitializeGraphice(HWND window, int windowWidth, int window
 	GetClientRect(g_hWnd, &g_rRect);					// Assign the windows rectangle to a global RECT
 	InitializeOpenGL(g_rRect.right, g_rRect.bottom);	// Init OpenGL with the global rect
 
-	//g_FontListID = CreateOpenGL3DFont("Impact", 0.4f);
+	g_FontListID = CreateOpenGL3DFont("Impact", 0.4f);
 
 	// Because we are doing 3D, we need to enable depth testing.  This allows it so
 	// the polygons are drawn in the order they are seen.
@@ -172,10 +172,13 @@ void OpenGlDrawer::OnBeginGraphics()
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 	glLoadIdentity();									// Reset The matrix
+
+	glPushAttrib(GL_CURRENT_BIT);
 	for(int i=0; i < backRects.size(); i++)
 	{
 		this->DrawRect(backRects[i], brashes[i]);
 	}
+	glPopAttrib();
 }
 
 void OpenGlDrawer::OnEndGraphics()
@@ -183,13 +186,59 @@ void OpenGlDrawer::OnEndGraphics()
 	SwapBuffers(g_hDC);									// Swap the backbuffers to the foreground
 
 }
-
-void OpenGlDrawer::DrawGdi(GDIBitmap gdi)
+LONG fourthX;
+LONG fourthY;
+void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player)
 {
+	glPushMatrix();
+	glOrtho(0.0f, windowWidth, windowHeight, 0, -1.0f, 1.0f);
+	
+
+	fourthX = gdi.points[1].x + gdi.points[2].x - gdi.points[0].x;
+	fourthY = gdi.points[1].y + gdi.points[2].y - gdi.points[0].y;
+
+	glEnable(GL_TEXTURE_2D);
+
+	if(player)
+		glBindTexture(GL_TEXTURE_2D, g_Texture[0]);                                      // Bind To The Texture ID
+	else
+		glBindTexture(GL_TEXTURE_2D, g_Texture[1]);                                      // Bind To The Texture ID
+
+	// Display a quad texture to the screen
+	glBegin(GL_QUADS);
+	glTexCoord2f(0, 0);	glVertex3f(fourthX, fourthY, 0);
+	glTexCoord2f(0, 1); glVertex3f(gdi.points[1].x, gdi.points[1].y, 0);
+	glTexCoord2f(1, 1); glVertex3f(gdi.points[0].x, gdi.points[0].y, 0);
+	glTexCoord2f(1, 0); glVertex3f(gdi.points[2].x, gdi.points[2].y, 0);
+	glEnd();
+
+	glDisable(GL_TEXTURE_2D);
+
+
+	/*glRasterPos2i(gdi.points[0].x, gdi.points[0].y + gdi.height);
+
+	
+	
+	glDrawPixels(gdi.width, gdi.height, GL_BGR_EXT, GL_UNSIGNED_BYTE, BM.bmBits);*/
+	glPopMatrix();
 }
 
-void OpenGlDrawer::DrawString(const std::wstring text, COLORREF color, int x, int y) const
+void OpenGlDrawer::DrawString(const char * text) const
 {
+	glPushAttrib(GL_CURRENT_BIT);
+	glColor3f(1, 0, 0);
+	glPushMatrix();
+	glOrtho(0.0f, windowWidth, windowHeight, 0, -1.0f, 1.0f);
+//	glTranslatef(windowWidth / 2, windowHeight / 2, 0);
+	glRasterPos2i(windowWidth / 2 - 100, windowHeight / 2);
+	void * font = GLUT_BITMAP_TIMES_ROMAN_24;
+	int len = strlen(text);
+	for (int i = 0; i < len; i++)
+	{
+		glutBitmapCharacter(font, text[i]);
+	}
+	glPopMatrix();
+	glPopAttrib();
 }
 
 void OpenGlDrawer::SizeOpenGLScreen(int width, int height)
@@ -222,14 +271,17 @@ void OpenGlDrawer::SizeOpenGLScreen(int width, int height)
 
 void OpenGlDrawer::DrawWinGame()
 {
+	DrawString("YOU WIN");
 }
 
 void OpenGlDrawer::DrawLoseGame()
 {
+	DrawString("YOU LOSE");
 }
 
 void OpenGlDrawer::DrawRect(RECT rect, HBRUSH brush)
 {
+	
 	LOGBRUSH lb;
 	int r, g, b;
 	if (GetObject(brush, sizeof(LOGBRUSH), (LPSTR)&lb))
@@ -256,7 +308,6 @@ void OpenGlDrawer::DrawBackgroundRect(RECT rect, HBRUSH brush)
 {
 	backRects.push_back(rect);
 	brashes.push_back(brush);
-
 }
 
 bool bSetupPixelFormat(HDC hdc)
@@ -309,3 +360,30 @@ void OpenGlDrawer::InitializeOpenGL(LONG width, LONG height)
 
 	SizeOpenGLScreen(width, height);					// Setup the screen translations and viewport
 }
+
+
+bool CreateTexture(GLuint &textureID, BITMAP bitmap)                          // Creates Texture From A Bitmap File
+{
+	glGenTextures(1, &textureID);                                                 // Create The Texture
+	
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);                                        // Pixel Storage Mode (Word Alignment / 4 Bytes)
+
+																				  // Typical Texture Generation Using Data From The Bitmap
+	glBindTexture(GL_TEXTURE_2D, textureID);                                      // Bind To The Texture ID
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);			  // Linear Min Filter
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);			  // Linear Mag Filter
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, bitmap.bmWidth, bitmap.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, bitmap.bmBits);
+
+	return TRUE;                                                                  // Loading Was Successful
+}
+
+void OpenGlDrawer::CreateTextures(HBITMAP player, HBITMAP computer)
+{   
+	BITMAP playerBitmap;// Create The Texture
+	GetObject(player, sizeof(playerBitmap), &playerBitmap);
+	CreateTexture(g_Texture[0], playerBitmap);
+	BITMAP cplayerBitmap;// Create The Texture
+	GetObject(computer, sizeof(cplayerBitmap), &cplayerBitmap);
+	CreateTexture(g_Texture[1], cplayerBitmap);
+}
+
