@@ -138,7 +138,7 @@ void Game::DrawPlayers() const {
 
 
 
-int moveDelay = 30;
+int moveDelay = 0;
 void Game::MovePlayers() {
 	if (moveDelay == 0) {
 		
@@ -155,7 +155,7 @@ void Game::MovePlayers() {
 			}
 		}
 		
-		moveDelay = 30;
+		moveDelay = 0;
 	}
 	else
 		moveDelay--;
@@ -186,8 +186,10 @@ void Game::DrawLoseGame() {
 }
 
 void Game::Render() {
+
 	BeginGraphics();
 	DrawPlayers();
+
 	if (this->IsPlayerWin()) {
 		this->DrawWinGame();
 	}
@@ -195,8 +197,12 @@ void Game::Render() {
 		this->DrawLoseGame();
 	}
 	else {
+		
 		ControlComputerPlayers();
+		
+		
 		MovePlayers();
+		
 	}
 	EndGraphics();
 }

@@ -178,8 +178,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	MSG msg;
     while (WindowOption::IsRunning) {
 
-       
-		Render();
+      
 		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
 		{
 			if (msg.message == WM_QUIT)					// If the message wasn't to quit
@@ -192,6 +191,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if (AnimateNextFrame(60))					// Make sure we only animate 60 FPS
 			{
 				Render();							// Render the scene every frame
+				
 			}
 			else
 			{
