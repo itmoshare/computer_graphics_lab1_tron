@@ -37,7 +37,7 @@
       <Filter>Source Files\Drawers</Filter>
     </ClCompile>
     <ClCompile Include="OpenGLDrawer.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Drawers</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -63,7 +63,7 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OpenGLDrawer.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Drawers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
