@@ -19,6 +19,9 @@
     <Filter Include="Header Files\Drawers">
       <UniqueIdentifier>{d120a435-6c12-40a7-a490-2ab767678428}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Shaders">
+      <UniqueIdentifier>{b1895cb0-e8b4-4408-bfcc-2f16a2dd3cb1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cc">
@@ -63,6 +66,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="OpenGLDrawer.h">
+      <Filter>Header Files\Drawers</Filter>
+    </ClInclude>
+    <ClInclude Include="LoadShaders.h">
       <Filter>Header Files\Drawers</Filter>
     </ClInclude>
   </ItemGroup>

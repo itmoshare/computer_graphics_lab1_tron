@@ -12,13 +12,20 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include <GL\glew.h>
 #include <gl\gl.h>										// Header File For The OpenGL32 Library
 #include <gl\glu.h>										// Header File For The GLu32 Library
 #include <glut.h>
+// Include GLM
+#include <glm.hpp>
+#include <gtc/matrix_transform.hpp>
+
 
 #include "WindowOptions.h"
 #include "Bitmap.h"
 #include "GDIBitmap.h"
+#include "LoadShaders.h"
+using namespace glm;
 
 class OpenGlDrawer {
 public:
@@ -36,7 +43,7 @@ public:
 	void DrawLoseGame();
 
 	void DrawRect(RECT rect, HBRUSH brush);
-	void DrawBackgroundRect(RECT rect, HBRUSH brush);
+	void DrawBackgroundRect(RECT rect, int type); //0-wall, 1-border
 
 
 	void InitializeOpenGL(LONG width, LONG height);
@@ -64,7 +71,9 @@ public:
 	HGDIOBJ def_font;
 
 	std::vector<RECT> backRects;
-	std::vector<HBRUSH>  brashes;
+	std::vector<int>  backTypes;
+	std::vector<std::vector<GLfloat>> backVertexes;
+
 
 
 	HWND  g_hWnd;										// This is the handle for the window
@@ -79,7 +88,14 @@ public:
 
 	UINT CreateOpenGL3DFont(LPSTR strFontName, float extrude);
 	HFONT hOldFont;
+	//new
+	GLuint VertexArrayID;
 
+	GLuint programWalls;
+	GLuint programBorder;
+
+	void DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, GLuint program);
+	std::vector<GLfloat> GetVertexBufferData(RECT rect);
 private:
 	void SetGameoverFontSettings();
 

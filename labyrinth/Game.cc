@@ -28,7 +28,7 @@ bool Game::LoadBitmapFromFile(const std::wstring filename, std::string resourceN
 
 void Game::DrawWall(double x, double y, double width, double height, HBRUSH brush) {
 	RECT wall = { x, y, x + width, y + height };
-	memDrawer->DrawBackgroundRect(wall, brush);
+	memDrawer->DrawBackgroundRect(wall, 0);
 	walls.push_back(wall);
 }
 
@@ -53,10 +53,10 @@ void Game::DrawBackground(int windowWidth, int WindowHeight) {
 	RECT borderLeftRect = { 0, 0, WindowOption::BORDER_WIDTH, windowHeight };
 	RECT borderRightRect = { windowWidth - WindowOption::BORDER_WIDTH, 0, windowWidth, windowHeight };
 	HBRUSH borderBrush = CreateSolidBrush(RGB(91, 120, 125));
-	memDrawer->DrawBackgroundRect(borderUpRect, borderBrush);
-	memDrawer->DrawBackgroundRect(borderDownRect, borderBrush);
-	memDrawer->DrawBackgroundRect(borderLeftRect, borderBrush);
-	memDrawer->DrawBackgroundRect(borderRightRect, borderBrush);
+	memDrawer->DrawBackgroundRect(borderUpRect, 1);
+	memDrawer->DrawBackgroundRect(borderDownRect, 1);
+	memDrawer->DrawBackgroundRect(borderLeftRect, 1);
+	memDrawer->DrawBackgroundRect(borderRightRect, 1);
 
 
 	//Draw walls

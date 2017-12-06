@@ -43,6 +43,8 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
+    <LibraryPath>C:\Projects\Repos\cg_tron_lab1\glm;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Projects\Repos\cg_tron_lab1\glm;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -59,7 +61,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;glut32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glut32.lib;glew32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -93,6 +95,7 @@
     <ClInclude Include="Direction.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GDIBitmap.h" />
+    <ClInclude Include="LoadShaders.h" />
     <ClInclude Include="MemoryDrawer.h" />
     <ClInclude Include="OpenGLDrawer.h" />
     <ClInclude Include="Player.h" />
