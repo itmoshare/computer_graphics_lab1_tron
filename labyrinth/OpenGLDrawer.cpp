@@ -8,8 +8,9 @@ UINT g_FontListID = 0;
 //	-1.0f, -1.0f, 0.0f,
 //	1.0f, -1.0f, 0.0f,
 //	0.0f,  1.0f, 0.0f,
-//};
+//};\"
 GLuint vertexbuffer;
+GLuint colorbuffer;
 GLuint MatrixID;
 glm::mat4 Projection;
 glm::mat4 View;
@@ -19,13 +20,13 @@ glm::vec3 unp;
 glm::vec3 unp1;
 glm::vec3 unp2;
 glm::vec3 unp3;
+
 void OpenGlDrawer::OnInitializeGraphice(HWND window, int windowWidth, int windowHeight)
 {
 	g_hWnd = window;										// Assign the window handle to a global window handle
 	GetClientRect(g_hWnd, &g_rRect);					// Assign the windows rectangle to a global RECT
 	InitializeOpenGL(g_rRect.right, g_rRect.bottom);	// Init OpenGL with the global rect
 	programWalls = LoadShaders("VertexShader.hlsl", "FragmentShaderWalls.hlsl");
-	programBorder = LoadShaders("VertexShader.hlsl", "FragmentShaderBorder.hlsl");
 	// Get a handle for our "MVP" uniform
 	MatrixID = glGetUniformLocation(programWalls, "MVP");
 
@@ -76,9 +77,9 @@ void OpenGlDrawer::OnInitializeGraphice(HWND window, int windowWidth, int window
 	// Создадим 1 буфер и поместим в переменную vertexbuffer его идентификатор
 	glGenBuffers(1, &vertexbuffer);
 
-	// Сделаем только что созданный буфер текущим
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-
+	//colors
+	
+	glGenBuffers(1, &colorbuffer);
 }
 
 
@@ -117,10 +118,7 @@ void OpenGlDrawer::OnBeginGraphics()
 	//glPushAttrib(GL_CURRENT_BIT);
 	for(int i=0; i < backVertexes.size(); i++)
 	{
-		if(backTypes[i] == 0)
-			this->DrawBackgroundRectWithShader(backVertexes[i], programWalls);
-		else
-			this->DrawBackgroundRectWithShader(backVertexes[i], programBorder);
+		this->DrawBackgroundRectWithShader(backVertexes[i], backTypes[i]);
 	}
 	//glPopAttrib();
 	////glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
@@ -141,17 +139,16 @@ void OpenGlDrawer::OnBeginGraphics()
 
 glm::vec4 viewport;
 
-void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, GLuint program) {
+void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, int type) {
 
 	//GLfloat* vertex_buffe_data = &vertexes[0];
 	GLfloat vertex_buffe_data[] = {
 		vertexes[0], vertexes[1],vertexes[2],vertexes[3],vertexes[4],vertexes[5],vertexes[6],vertexes[7],vertexes[8],vertexes[9],
 		vertexes[10],vertexes[11],
 	};
-	// Передадим информацию о вершинах в OpenGL
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data), vertex_buffe_data, GL_STATIC_DRAW);
 
-	glUseProgram(program);
+
+	glUseProgram(programWalls);
 
 	// Send our transformation to the currently bound shader, 
 	// in the "MVP" uniform
@@ -160,20 +157,48 @@ void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, G
 	// Указываем, что первым буфером атрибутов будут вершины
 	glEnableVertexAttribArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
+	// Передадим информацию о вершинах в OpenGL
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data), vertex_buffe_data, GL_STATIC_DRAW);
 	glVertexAttribPointer(
 		0,                  // Атрибут 0. Подробнее об этом будет рассказано в части, посвященной шейдерам.
 		3,                  // Размер
 		GL_FLOAT,           // Тип
 		GL_FALSE,           // Указывает, что значения не нормализованы
 		0,                  // Шаг
-		(void*)0            // Смещение массива в буфере
+		(void*)0           // Смещение массива в буфере
 	);
 
+	static const GLfloat color_type[4][3] = {
+		{0.0, 0.01, 0.15},
+		{0.36, 0.47, 0.49 },
+		{0.12, 0.53, 0.94},
+		{0.99, 0.85, 0.0}
+	};
+
+	GLfloat color_buffer_data[] = {
+		color_type[type][0],color_type[type][1],color_type[type][2],
+		color_type[type][0],color_type[type][1],color_type[type][2],
+		color_type[type][0],color_type[type][1],color_type[type][2],
+		color_type[type][0],color_type[type][1],color_type[type][2]
+	};
+
+	//цвет
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, colorbuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(color_buffer_data), color_buffer_data, GL_STATIC_DRAW);
+	glVertexAttribPointer(
+		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		3,                                // size
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                        // array buffer offset
+	);
 	// Вывести треугольник!
 	glDrawArrays(GL_QUADS, 0, 4); // Начиная с вершины 0, всего 3 вершины -> один треугольник
 
 	glDisableVertexAttribArray(0);
-
+	glDisableVertexAttribArray(1);
 }
 
 GLfloat * getCentralizedCoords(GLfloat x, GLfloat y, GLfloat wh, GLfloat hh) {

@@ -94,7 +94,7 @@ public:
 	GLuint programWalls;
 	GLuint programBorder;
 
-	void DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, GLuint program);
+	void DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, int type);
 	std::vector<GLfloat> GetVertexBufferData(RECT rect);
 private:
 	void SetGameoverFontSettings();
