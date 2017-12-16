@@ -72,4 +72,18 @@
       <Filter>Header Files\Drawers</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="FragmentShaderWalls.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="PalyerVertexShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="PlayerFragmentShader.frag">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+    <None Include="VertexShader.vert">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
+  </ItemGroup>
 </Project>

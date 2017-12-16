@@ -27,7 +27,7 @@ public:
     bool LoadBitmapFromFile(const std::wstring filename, std::string resourceName);
     void InitializeGraphics(HWND window);    
     void BeginGraphics();
-    void DrawBitmap(Bitmap bitmap, int x, int y)  const;
+    void DrawBitmap(Bitmap bitmap, int x, int y, Direction direction)  const;
     void DrawString(const std::wstring text, COLORREF color, int x, int y) const;
     void DrawPlayers() const;
     void Render();

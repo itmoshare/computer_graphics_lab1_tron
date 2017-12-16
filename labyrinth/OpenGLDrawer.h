@@ -25,6 +25,7 @@
 #include "Bitmap.h"
 #include "GDIBitmap.h"
 #include "LoadShaders.h"
+#include "Direction.h"
 using namespace glm;
 
 class OpenGlDrawer {
@@ -34,11 +35,11 @@ public:
 	void OnInitializeGraphice(HWND window, int windowWidth, int windowHeight);
 	void OnBeginGraphics();
 	void OnEndGraphics();
-	void DrawGdi(GDIBitmap gdi, bool player);
+	void DrawGdi(GDIBitmap gdi, bool player, Direction direction);
 	void DrawString(const char * text) const;
 
 	void SizeOpenGLScreen(int width, int height);
-
+	void OpenGlDrawer::DrawString(const std::wstring text, COLORREF color, int x, int y) const;
 	void DrawWinGame();
 	void DrawLoseGame();
 
@@ -74,7 +75,25 @@ public:
 	std::vector<int>  backTypes;
 	std::vector<std::vector<GLfloat>> backVertexes;
 
+	GLuint vertexbuffer;
+	GLuint colorbuffer;
+	GLuint textureBuffer;
+	GLuint uvBuffer;
+	GLuint MatrixID;
+	GLuint MatrixID2;
+	glm::mat4 Projection;
+	glm::mat4 View;
+	glm::mat4 Model;
+	glm::mat4 MVP;
+	glm::vec3 unp;
+	glm::vec3 unp1;
+	glm::vec3 unp2;
+	glm::vec3 unp3;
+	
+	glm::mat4 trans;
 
+	GLYPHMETRICSFLOAT g_GlyphInfo[256];
+	UINT g_FontListID = 0;
 
 	HWND  g_hWnd;										// This is the handle for the window
 	RECT  g_rRect;										// This holds the window dimensions
@@ -92,7 +111,9 @@ public:
 	GLuint VertexArrayID;
 
 	GLuint programWalls;
-	GLuint programBorder;
+	GLuint programPlayers;
+
+	GLuint TextureID;
 
 	void DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, int type);
 	std::vector<GLfloat> GetVertexBufferData(RECT rect);

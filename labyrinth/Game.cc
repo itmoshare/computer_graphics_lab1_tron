@@ -119,11 +119,11 @@ void Game::BeginGraphics() {
 
 
 
-void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
+void Game::DrawBitmap(Bitmap bitmap, int x, int y, Direction direction) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
 	bool isPlayer = bitmap.index == 0;
-	memDrawer->DrawGdi(gdi, isPlayer);
+	memDrawer->DrawGdi(gdi, isPlayer, direction);
 }
 
 
@@ -132,7 +132,7 @@ void Game::DrawPlayers() const {
 	
 	for (int i = 0; i < allPlayers.size(); i++)
 	{
-		this->DrawBitmap(allPlayers[i]->figure, allPlayers[i]->X, allPlayers[i]->Y);
+		this->DrawBitmap(allPlayers[i]->figure, allPlayers[i]->X, allPlayers[i]->Y, allPlayers[i]->currentDirection);
 	}
 }
 
@@ -185,6 +185,7 @@ void Game::DrawLoseGame() {
 	memDrawer->DrawLoseGame();     
 }
 
+int c = 0;
 void Game::Render() {
 
 	BeginGraphics();
@@ -204,7 +205,20 @@ void Game::Render() {
 		MovePlayers();
 		
 	}
-	EndGraphics();
+	//HACK
+	if (this->IsPlayerWin()) {
+		this->DrawWinGame();
+		c++;
+	}
+	else if (this->IsPlayerLose()) {
+		this->DrawLoseGame();
+		c++;
+	}
+	if(c < 2)
+	{
+		EndGraphics();
+	}
+
 }
 
 void Game::EndGraphics()

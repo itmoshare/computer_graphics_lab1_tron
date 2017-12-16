@@ -1,152 +1,66 @@
 ﻿#include "OpenGLDrawer.h"
 
-
-GLYPHMETRICSFLOAT g_GlyphInfo[256];
-UINT g_FontListID = 0;
-
-//static const GLfloat g_vertex_buffer_data[] = {
-//	-1.0f, -1.0f, 0.0f,
-//	1.0f, -1.0f, 0.0f,
-//	0.0f,  1.0f, 0.0f,
-//};\"
-GLuint vertexbuffer;
-GLuint colorbuffer;
-GLuint MatrixID;
-glm::mat4 Projection;
-glm::mat4 View;
-glm::mat4 Model;
-glm::mat4 MVP;
-glm::vec3 unp;
-glm::vec3 unp1;
-glm::vec3 unp2;
-glm::vec3 unp3;
-
 void OpenGlDrawer::OnInitializeGraphice(HWND window, int windowWidth, int windowHeight)
 {
 	g_hWnd = window;										// Assign the window handle to a global window handle
 	GetClientRect(g_hWnd, &g_rRect);					// Assign the windows rectangle to a global RECT
 	InitializeOpenGL(g_rRect.right, g_rRect.bottom);	// Init OpenGL with the global rect
-	programWalls = LoadShaders("VertexShader.hlsl", "FragmentShaderWalls.hlsl");
+	programWalls = LoadShaders("VertexShader.vert", "FragmentShaderWalls.frag");
+	programPlayers = LoadShaders("PalyerVertexShader.vert", "PlayerFragmentShader.frag");
 	// Get a handle for our "MVP" uniform
 	MatrixID = glGetUniformLocation(programWalls, "MVP");
-
+	MatrixID2 = glGetUniformLocation(programPlayers, "MVP");
 	// Projection matrix : 45° Field of View, 4:3 ratio, display range : 0.1 unit <-> 100 units
 	Projection = glm::perspective(glm::radians(45.0f), (windowWidth * 1.0f) / (windowHeight * 1.0f) , 0.1f, 100.0f);
-	// Or, for an ortho camera :
-	//Projection = glm::ortho(0.0f, windowWidth * 1.0f, windowHeight *1.0f, 0.0f, -100.0f, 100.0f); // In world coordinates
-
+	
 	// Camera matrix
 	View = glm::lookAt(
-		glm::vec3(0, -2, 3), // Camera is at (4,3,3), in World Space
+		glm::vec3(0, -2, 1.3), // Camera is at (4,3,3), in World Space
 		glm::vec3(0, 0, 0), // and looks at the origin
 		glm::vec3(0, 1, 0)  // Head is up (set to 0,-1,0 to look upside-down)
 	);
 	// Model matrix : an identity matrix (model will be at the origin)
 	Model = glm::mat4(1.0f);
 
-
-	
-
 	// Our ModelViewProjection : multiplication of our 3 matrices
 	MVP = Projection * View * Model; // Remember, matrix multiplication is the other way around
 
-									 //new
+										 //new
 	glGenVertexArrays(1, &VertexArrayID);
 	glBindVertexArray(VertexArrayID);
-	// Создать и откомпилировать нашу шейдерную программу
-	//programBorder = LoadShaders("VertexShader.hlsl", "FragmentShaderBorder.hlsl");
-
-	//RECT rect = { 0 , 0, 100, 100 };
-
-	//GLfloat * g_vertex_buffer_data = GetVertexBufferData(rect);
-	//GLfloat g_vertex_buffer_data2[12];
-	//for(int i = 0; i < 12; i++) {
-	//	g_vertex_buffer_data2[i] = g_vertex_buffer_data[i];
-	//}
-
-
-	//// Создадим 1 буфер и поместим в переменную vertexbuffer его идентификатор
-	//glGenBuffers(1, &vertexbuffer);
-
-	//// Сделаем только что созданный буфер текущим
-	//glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-
-	//// Передадим информацию о вершинах в OpenGL
-	//glBufferData(GL_ARRAY_BUFFER, sizeof(g_vertex_buffer_data2), g_vertex_buffer_data2, GL_STATIC_DRAW);
 
 	// Создадим 1 буфер и поместим в переменную vertexbuffer его идентификатор
 	glGenBuffers(1, &vertexbuffer);
 
 	//colors
-	
 	glGenBuffers(1, &colorbuffer);
+
+	//texture
+	glGenBuffers(1, &textureBuffer);
+	glGenBuffers(1, &uvBuffer);
+	TextureID = glGetUniformLocation(programPlayers, "myTextureSampler");
 }
 
 
 void OpenGlDrawer::OnBeginGraphics()
 {
-	//glPushMatrix();
-	//glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	//glLoadIdentity();									// Reset The Projection Matrix
-
-	////glOrtho(0.0f, windowWidth, windowHeight, 0, -100.0f, 100.0f);
-
-	//// Calculate The Aspect Ratio Of The Window
-	//// The parameters are:
-	//// (view angle, aspect ration of the width to the height, 
-	////  the closest distance to the camera before it clips, 
-	//// FOV		// Ratio				//  the farthest distance before it stops drawing).
-	//gluPerspective(45.0f, (GLfloat)windowWidth / (GLfloat)windowHeight, -100.0f, 150.0f);
-
-
-	//glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	//glLoadIdentity();									// Reset The Modelview Matrix
-	////gluLookAt(0, 0, 6, 0, 0, 0, 0, 1, 0);
-	////gluLookAt(0, -4, 6, 0, 0, 0, 0, 1, 0);
-
-	//glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	//glLoadIdentity();									// Reset The Projection Matrix
-
-	//glOrtho(0.0f, windowWidth, windowHeight, 0, -100.0f, 100.0f);
-
-	//glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	//glLoadIdentity();									// Reset The Modelview Matrix
-
-
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
-	//glLoadIdentity();									// Reset The matrix
-	//glPushAttrib(GL_CURRENT_BIT);
+	// Clear the screen
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	for(int i=0; i < backVertexes.size(); i++)
 	{
 		this->DrawBackgroundRectWithShader(backVertexes[i], backTypes[i]);
-	}
-	//glPopAttrib();
-	////glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	////glLoadIdentity();									// Reset The Projection Matrix
-
-	////gluPerspective(45.0f, (GLfloat)windowWidth / (GLfloat)windowHeight, 0.0f, 150.0f);
-
-	////glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	////glLoadIdentity();									// Reset The Modelview Matrix
-	////glRotatef(0.5, 0, 0, 1);
-	
-	
-	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	
-
-
+	}	
 }
-
-glm::vec4 viewport;
 
 void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, int type) {
 
 	//GLfloat* vertex_buffe_data = &vertexes[0];
 	GLfloat vertex_buffe_data[] = {
-		vertexes[0], vertexes[1],vertexes[2],vertexes[3],vertexes[4],vertexes[5],vertexes[6],vertexes[7],vertexes[8],vertexes[9],
-		vertexes[10],vertexes[11],
+		vertexes[0], vertexes[1],vertexes[2],
+		vertexes[3],vertexes[4],vertexes[5],
+		vertexes[6],vertexes[7],vertexes[8],
+		vertexes[9],vertexes[10],vertexes[11],
 	};
-
 
 	glUseProgram(programWalls);
 
@@ -194,24 +108,99 @@ void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, i
 		0,                                // stride
 		(void*)0                        // array buffer offset
 	);
-	// Вывести треугольник!
-	glDrawArrays(GL_QUADS, 0, 4); // Начиная с вершины 0, всего 3 вершины -> один треугольник
+
+	glDrawArrays(GL_QUADS, 0, 4); 
 
 	glDisableVertexAttribArray(0);
 	glDisableVertexAttribArray(1);
 }
 
-GLfloat * getCentralizedCoords(GLfloat x, GLfloat y, GLfloat wh, GLfloat hh) {
+void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player, Direction direction)
+{
+	glUseProgram(this->programPlayers);
+	glUniformMatrix4fv(MatrixID2, 1, GL_FALSE, &MVP[0][0]);
+	float angle;
+	switch (direction)
+	{
+		case Direction::Up:
+		case Direction::Down:
+			angle = 0;
+			break;
+		case Direction::Left: 
+		case Direction::Right: 
+			angle = -90;
+			break;
+	}
+	float s = sin(glm::radians(angle));
+	float c = cos(glm::radians(angle));
+	mat2 m = mat2(c, -s, s, c);
+	GLuint rotId = glGetUniformLocation(programPlayers, "rot");
+	
+	glUniformMatrix2fv(rotId, 1, GL_FALSE, &m[0][0]);
 
-	GLfloat res[] = { x - wh, hh - y };
-	return res;
+	int texutre_id;
+	if (player)
+		texutre_id = 0;
+	else texutre_id = 1;
+
+	//// Bind our texture in Texture Unit 0
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, g_Texture[texutre_id]);
+	// Set our "myTextureSampler" sampler to use Texture Unit 0
+	glUniform1i(TextureID, 0);
+	glEnableVertexAttribArray(0);
+
+	LONG fourthX = gdi.points[1].x + gdi.points[2].x - gdi.points[0].x;
+	LONG fourthY = gdi.points[1].y + gdi.points[2].y - gdi.points[0].y;
+
+	std::vector<GLfloat> playerVertexBufferDataTemp = GetVertexBufferData({gdi.points[0].x, gdi.points[0].y, fourthX, fourthY});
+	GLfloat vertex_buffe_data[] = {
+		playerVertexBufferDataTemp[0], playerVertexBufferDataTemp[1],playerVertexBufferDataTemp[2],
+		playerVertexBufferDataTemp[3],playerVertexBufferDataTemp[4],playerVertexBufferDataTemp[5] ,
+		playerVertexBufferDataTemp[6],playerVertexBufferDataTemp[7],playerVertexBufferDataTemp[8] ,
+		playerVertexBufferDataTemp[9],playerVertexBufferDataTemp[10],playerVertexBufferDataTemp[11],
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data), vertex_buffe_data, GL_STATIC_DRAW);
+	glVertexAttribPointer(
+		0,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		3,                                // size
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                        // array buffer offset
+	);
+
+	const GLfloat texCoordData[] =
+	{
+		0.0, 1.0,
+		0.0, 0.0,
+		1.0, 0.0,
+		1.0, 1.0
+		
+	};
+
+	glEnableVertexAttribArray(1);
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoordData), texCoordData, GL_STATIC_DRAW);
+
+	glVertexAttribPointer(
+		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.
+		2,                                // size : U+V => 2
+		GL_FLOAT,                         // type
+		GL_FALSE,                         // normalized?
+		0,                                // stride
+		(void*)0                          // array buffer offset
+	);
+
+	glDrawArrays(GL_QUADS, 0, 4);
+	glDisableVertexAttribArray(0);
+	glDisableVertexAttribArray(1);
 }
 
 std::vector<GLfloat> OpenGlDrawer::GetVertexBufferData(RECT rect)
 {
-	//00->-1,1; 
-	//wh->1,-1
-	
 	GLfloat wh = windowWidth * 1.0f / 2.0f;
 	GLfloat hh = windowHeight * 1.0f / 2.0f;
 	
@@ -230,61 +219,10 @@ std::vector<GLfloat> OpenGlDrawer::GetVertexBufferData(RECT rect)
 }
 void OpenGlDrawer::OnEndGraphics()
 {
-	//glPopMatrix();
 	SwapBuffers(g_hDC);									// Swap the backbuffers to the foreground
-
-}
-LONG fourthX;
-LONG fourthY;
-void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player)
-{
-	//glPushMatrix();
-	////glOrtho(0.0f, windowWidth, windowHeight, 0, -1.0f, 1.0f);
-	//
-
-	//fourthX = gdi.points[1].x + gdi.points[2].x - gdi.points[0].x;
-	//fourthY = gdi.points[1].y + gdi.points[2].y - gdi.points[0].y;
-
-	//glEnable(GL_TEXTURE_2D);
-
-	//if(player)
-	//	glBindTexture(GL_TEXTURE_2D, g_Texture[0]);                                      // Bind To The Texture ID
-	//else
-	//	glBindTexture(GL_TEXTURE_2D, g_Texture[1]);                                      // Bind To The Texture ID
-
-	//// Display a quad texture to the screen
-	//glBegin(GL_QUADS);
-	//glTexCoord2f(0, 0);	glVertex3f(fourthX, fourthY, 0.5);
-	//glTexCoord2f(0, 1); glVertex3f(gdi.points[1].x, gdi.points[1].y, 0.5);
-	//glTexCoord2f(1, 1); glVertex3f(gdi.points[0].x, gdi.points[0].y, 0.5);
-	//glTexCoord2f(1, 0); glVertex3f(gdi.points[2].x, gdi.points[2].y, 0.5);
-	///*glTexCoord2f(0, 0);	glVertex3f(fourthX/windowWidth, fourthY / windowHeight, 0.5);
-	//glTexCoord2f(0, 1); glVertex3f(gdi.points[1].x / windowWidth, gdi.points[1].y / windowHeight, 0.5);
-	//glTexCoord2f(1, 1); glVertex3f(gdi.points[0].x / windowWidth, gdi.points[0].y / windowHeight, 0.5);
-	//glTexCoord2f(1, 0); glVertex3f(gdi.points[2].x / windowWidth, gdi.points[2].y / windowHeight, 0.5);*/
-	//glEnd();
-
-	//glDisable(GL_TEXTURE_2D);
-	//glPopMatrix();
 }
 
-void OpenGlDrawer::DrawString(const char * text) const
-{
-//	glPushAttrib(GL_CURRENT_BIT);
-//	glColor3f(1, 0, 0);
-//	glPushMatrix();
-//	//glOrtho(0.0f, windowWidth, windowHeight, 0, -1.0f, 1.0f);
-////	glTranslatef(windowWidth / 2, windowHeight / 2, 0);
-//	glRasterPos2i(windowWidth / 2 - 100, windowHeight / 2);
-//	void * font = GLUT_BITMAP_TIMES_ROMAN_24;
-//	int len = strlen(text);
-//	for (int i = 0; i < len; i++)
-//	{
-//		glutBitmapCharacter(font, text[i]);
-//	}
-//	glPopMatrix();
-//	glPopAttrib();
-}
+
 
 void OpenGlDrawer::SizeOpenGLScreen(int width, int height)
 {
@@ -293,55 +231,41 @@ void OpenGlDrawer::SizeOpenGLScreen(int width, int height)
 		height = 1;										// Make the Height Equal One
 	}
 
-	//glViewport(0, 0, width, height);						// Make our viewport the whole window
-															// We could make the view smaller inside
-															// Our window if we wanted too.
-															// The glViewport takes (x, y, width, height)
-															// This basically means, what are our drawing boundaries
-	
+}
 
+void OpenGlDrawer::SetGameoverFontSettings() {
+	SetBkMode(g_hDC, TRANSPARENT);
+	HFONT hFont = CreateFont(48, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Impact"));
+	def_font = SelectObject(g_hDC, hFont);
+}
+
+void OpenGlDrawer::DrawString(const std::wstring text, COLORREF color, int x, int y) const
+{
+	SetTextColor(g_hDC, color);
+	TextOut(g_hDC, x, y, text.c_str(), text.size());
 }
 
 void OpenGlDrawer::DrawWinGame()
 {
-	//DrawString("YOU WIN");
+	SetGameoverFontSettings();
+	std::wstring result(_T("YOU WON"));
+	DrawString(result, RGB(255, 0, 0), windowWidth / 2 - 70, windowHeight / 2);
 }
 
 void OpenGlDrawer::DrawLoseGame()
 {
-	//DrawString("YOU LOSE");
+	SetGameoverFontSettings();
+	std::wstring result(_T("YOU LOSE"));
+	DrawString(result, RGB(255, 0, 0), windowWidth / 2 - 70, windowHeight / 2);
 }
 
 void OpenGlDrawer::DrawRect(RECT rect, HBRUSH brush)
 {
-	
-
-
-	//LOGBRUSH lb;
-	//int r, g, b;
-	//if (GetObject(brush, sizeof(LOGBRUSH), (LPSTR)&lb))
-	//{
-	//	r = GetRValue(lb.lbColor);
-	//	g = GetGValue(lb.lbColor);
-	//	b = GetBValue(lb.lbColor);
-	//}
-
-	//glPushMatrix();										// Create a matrix scope to not effect the rest
-	//glColor3ub(r, g, b);
-	////glOrtho(0.0f, windowWidth, windowHeight, 0, -1.0f, 1.0f);
-	//glBegin(GL_QUADS);
-	//glVertex3f(rect.left, rect.top, 0);
-	//glVertex3f(rect.right, rect.top, 0);
-	//glVertex3f(rect.right, rect.bottom, 0);
-	//glVertex3f(rect.left, rect.bottom, 0);
-	//glEnd();
-
-	//glPopMatrix();
 }
 
 void OpenGlDrawer::DrawBackgroundRect(RECT rect, int type)
 {
-	
 	std::vector<GLfloat> g_vertex_buffer_data = GetVertexBufferData(rect);
 	
 	backVertexes.push_back(g_vertex_buffer_data);
@@ -384,10 +308,7 @@ bool bSetupPixelFormat(HDC hdc)
 void OpenGlDrawer::InitializeOpenGL(LONG width, LONG height)
 {
 	g_hDC = GetDC(g_hWnd);								// This sets our global HDC
-	
-	
-
-
+	backbufferDC = CreateCompatibleDC(g_hDC);
 														// We don't free this hdc until the end of our program
 	if (!bSetupPixelFormat(g_hDC))						// This sets our pixel format/information
 		PostQuitMessage(0);							// If there's an error, quit
@@ -398,30 +319,21 @@ void OpenGlDrawer::InitializeOpenGL(LONG width, LONG height)
 	windowWidth = width;
 	windowHeight = height;
 
-	/*glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_CULL_FACE);
-	glEnable(GL_POINT_SMOOTH);
-	glEnable(GL_LINE_SMOOTH);
-	glEnable(GL_POLYGON_SMOOTH);*/
-
 	glewInit();
-	//SizeOpenGLScreen(width, height);					// Setup the screen translations and viewport
 }
 
 
 bool CreateTexture(GLuint &textureID, BITMAP bitmap)                          // Creates Texture From A Bitmap File
 {
-	//glGenTextures(1, &textureID);                                                 // Create The Texture
+	glGenTextures(1, &textureID);                                                 // Create The Texture
 	//
-	//glPixelStorei(GL_UNPACK_ALIGNMENT, 4);                                        // Pixel Storage Mode (Word Alignment / 4 Bytes)
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);                                        // Pixel Storage Mode (Word Alignment / 4 Bytes)
 
 	//																			  // Typical Texture Generation Using Data From The Bitmap
-	//glBindTexture(GL_TEXTURE_2D, textureID);                                      // Bind To The Texture ID
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);			  // Linear Min Filter
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);			  // Linear Mag Filter
-	//glTexImage2D(GL_TEXTURE_2D, 0, 3, bitmap.bmWidth, bitmap.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, bitmap.bmBits);
+	glBindTexture(GL_TEXTURE_2D, textureID);                                      // Bind To The Texture ID
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);			  // Linear Min Filter
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);			  // Linear Mag Filter
+	glTexImage2D(GL_TEXTURE_2D, 0, 3, bitmap.bmWidth, bitmap.bmHeight, 0, GL_BGR_EXT, GL_UNSIGNED_BYTE, bitmap.bmBits);
 
 	return TRUE;                                                                  // Loading Was Successful
 }
