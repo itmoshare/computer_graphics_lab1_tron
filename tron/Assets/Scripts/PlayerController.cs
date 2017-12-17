@@ -25,8 +25,10 @@ public class PlayerController : MonoBehaviour {
     public int maxSpeed;
     public int minSpeed;
 
+    
 	private Rigidbody rb;
     private float nextKeyHit;
+    private bool isAlive = true;
 
 	void Start ()
 	{
@@ -34,14 +36,39 @@ public class PlayerController : MonoBehaviour {
 	}
 
 	void Update() {
+        if(isAlive)
+        {
+            var lastPosition = GetTrailPosition(transform.position, 0.2f);
+            transform.Translate(Vector3.forward * speed * 0.005f);
+            var newPosition = GetTrailPosition(transform.position, 0.2f);
 
-		transform.Translate(Vector3.forward * speed * 0.005f);
-		if (handleInput)
-			HandleInput();
+            DrawCollidablePath(lastPosition, newPosition);
+
+            if (handleInput)
+                HandleInput();
+        }
     }
 
-	void FixedUpdate() {
+    void DrawCollidablePath(Vector3 lastPos, Vector3 newPos)
+    {
+        GameObject colliderKeeper = new GameObject("collider");
+        BoxCollider bc = colliderKeeper.AddComponent<BoxCollider>();
+        colliderKeeper.transform.position = Vector3.Lerp(newPos, lastPos, 0.5f);
+        colliderKeeper.transform.LookAt(newPos);
+        bc.size = new Vector3(0.1f, 0.3f, Vector3.Distance(newPos, lastPos));
+    }
+
+    void FixedUpdate() {
        
+
+	}
+
+	void OnCollisionEnter(Collision col) {
+        if (col.gameObject.name != "Ground")
+        {
+            this.speed = 0;
+            this.isAlive = false;
+        }
 
 	}
 
@@ -85,7 +112,7 @@ public class PlayerController : MonoBehaviour {
 
     bool IsOpositeDirection(Direction direction)
 	{
-        switch (direction)
+		switch (currentDirection)
         {
             case Direction.Left:
                 return direction == Direction.Right;
@@ -111,7 +138,24 @@ public class PlayerController : MonoBehaviour {
         return (Vector3)typeof(Vector3).GetProperty(direction.ToString().ToLower()).GetValue(null, null);
     }
 
-    Vector3 GetTurnDirectionVector(Direction direction)
+    Vector3 GetTrailPosition(Vector3 position, float diff)
+    {
+        switch (currentDirection)
+        {
+            case Direction.Left:
+                return new Vector3(position.x + diff, position.y, position.z);
+            case Direction.Right:
+                return new Vector3(position.x - diff, position.y, position.z);
+            case Direction.Forward:
+                return new Vector3(position.x, position.y, position.z - diff);
+            case Direction.Back:
+                return new Vector3(position.x, position.y, position.z + diff);
+            default:
+                return position;
+        }
+    }
+
+        Vector3 GetTurnDirectionVector(Direction direction)
     {
         switch (currentDirection)
         {
@@ -148,5 +192,8 @@ public class PlayerController : MonoBehaviour {
             default:
                 throw new Exception();
         }
+
     }
+
+   
 }
