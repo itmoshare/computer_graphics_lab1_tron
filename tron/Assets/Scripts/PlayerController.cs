@@ -19,11 +19,12 @@ public class PlayerController : MonoBehaviour {
         Vector3 Vector { get; set; }
     }
 
-	public int speed;
+    public float speed;
 	public Direction currentDirection; //0-Left, 1-Right, 2-Up, 3-Down
 	public bool handleInput;
     public int maxSpeed;
     public int minSpeed;
+
 
     
 	private Rigidbody rb;
@@ -46,8 +47,11 @@ public class PlayerController : MonoBehaviour {
 
             if (handleInput)
                 HandleInput();
+            else
+                SelfHandle();
         }
     }
+    
 
     void DrawCollidablePath(Vector3 lastPos, Vector3 newPos)
     {
@@ -68,6 +72,8 @@ public class PlayerController : MonoBehaviour {
         {
             this.speed = 0;
             this.isAlive = false;
+			this.tag = "dead";
+            rb.constraints = RigidbodyConstraints.FreezeAll;
         }
 
 	}
@@ -89,6 +95,13 @@ public class PlayerController : MonoBehaviour {
             MoveOrTurn(Direction.Back);
 		}
 	}
+
+    void SelfHandle()
+    {
+        if (speed < maxSpeed)
+            speed += 0.001f;
+
+    }
 
 	void MoveOrTurn(Direction direction)
 	{
