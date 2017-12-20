@@ -490,8 +490,8 @@ MonoBehaviour:
   handleInput: 0
   maxSpeed: 15
   minSpeed: 1
---- !u!136 &789225088
-CapsuleCollider:
+--- !u!65 &789225086
+BoxCollider:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
@@ -499,10 +499,21 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 1
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  serializedVersion: 2
+  m_Size: {x: 5.3761244, y: 2.4945605, z: 4.582939}
+  m_Center: {x: -0.38844585, y: 1.7704058, z: 3.9582348}
+--- !u!65 &789225087
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 789225084}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 5.818093, y: 1.3538133, z: 2.320404}
+  m_Center: {x: -0.574249, y: 0.79100126, z: 12.474003}
 --- !u!54 &789225089
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -1118,7 +1129,7 @@ Prefab:
       objectReference: {fileID: 0}
     - target: {fileID: 400012, guid: 35c5647520d10a449bc49a5d47d59064, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.1103716
+      value: -3.142
       objectReference: {fileID: 0}
     - target: {fileID: 400012, guid: 35c5647520d10a449bc49a5d47d59064, type: 3}
       propertyPath: m_LocalRotation.x
@@ -1206,8 +1217,8 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!136 &1507520858
-CapsuleCollider:
+--- !u!65 &1507520858
+BoxCollider:
   m_ObjectHideFlags: 0
   m_PrefabParentObject: {fileID: 0}
   m_PrefabInternal: {fileID: 0}
@@ -1215,10 +1226,9 @@ CapsuleCollider:
   m_Material: {fileID: 0}
   m_IsTrigger: 0
   m_Enabled: 1
-  m_Radius: 0.5
-  m_Height: 1
-  m_Direction: 1
-  m_Center: {x: 0, y: 0, z: 0}
+  serializedVersion: 2
+  m_Size: {x: 4.736578, y: 3.1441414, z: 3.9455652}
+  m_Center: {x: 0.19340274, y: 1.0720706, z: 4.077592}
 --- !u!114 &1507520859
 MonoBehaviour:
   m_ObjectHideFlags: 0

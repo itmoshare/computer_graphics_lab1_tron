@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
 
 public class PlayerController : MonoBehaviour {
 
@@ -30,6 +31,8 @@ public class PlayerController : MonoBehaviour {
 	private Rigidbody rb;
     private float nextKeyHit;
     private bool isAlive = true;
+	private int framesBeforeNextTurn = TURN_DELAY;
+	private const int TURN_DELAY = 10;
 
 	void Start ()
 	{
@@ -39,7 +42,7 @@ public class PlayerController : MonoBehaviour {
 	void Update() {
         if(isAlive)
         {
-            var lastPosition = GetTrailPosition(transform.position, 0.2f);
+            var lastPosition = GetTrailPosition(transform.position, 0.15f);
             transform.Translate(Vector3.forward * speed * 0.005f);
             var newPosition = GetTrailPosition(transform.position, 0.2f);
 
@@ -55,7 +58,8 @@ public class PlayerController : MonoBehaviour {
 
     void DrawCollidablePath(Vector3 lastPos, Vector3 newPos)
     {
-        GameObject colliderKeeper = new GameObject("collider");
+		var name = handleInput ? "colliderPlayer" : "aicollider";
+        GameObject colliderKeeper = new GameObject(name);
         BoxCollider bc = colliderKeeper.AddComponent<BoxCollider>();
         colliderKeeper.transform.position = Vector3.Lerp(newPos, lastPos, 0.5f);
         colliderKeeper.transform.LookAt(newPos);
@@ -63,8 +67,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     void FixedUpdate() {
-       
-
+		framesBeforeNextTurn++;
 	}
 
 	void OnCollisionEnter(Collision col) {
@@ -76,6 +79,15 @@ public class PlayerController : MonoBehaviour {
             rb.constraints = RigidbodyConstraints.FreezeAll;
         }
 
+	}
+
+	void OnTriggerEnter(Collider col) { // for prediction
+		if (col.gameObject.name != "Ground" && !handleInput) {
+			if (framesBeforeNextTurn >= TURN_DELAY) {
+				TurnAi ();
+				framesBeforeNextTurn = 0;
+			}
+		}
 	}
 
 	void HandleInput() {
@@ -118,10 +130,22 @@ public class PlayerController : MonoBehaviour {
             return;
         }
 
-        var vector3Direction = GetTurnDirectionVector(direction);
-        transform.Rotate(vector3Direction);
-        currentDirection = direction;
+		Turn (direction);
     }
+
+	void Turn(Direction direction) {
+		var vector3Direction = GetTurnDirectionVector(direction);
+		transform.Rotate(vector3Direction);
+		currentDirection = direction;
+	}
+
+	void TurnAi() {
+		var random = new System.Random();
+		var randomDirectionNumber = random.NextDouble() < 0.5 ? 0 : 1;
+        var direction = Enum.GetValues(typeof(Direction)).Cast<Direction>()
+			.Where(d => !IsOpositeDirection(d) && d != currentDirection).Skip(randomDirectionNumber).First();
+        Turn(direction);
+	}
 
     bool IsOpositeDirection(Direction direction)
 	{
