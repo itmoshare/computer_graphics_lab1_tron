@@ -24,7 +24,7 @@ public:
 	void OnInitializeGraphice(HWND window, int windowWidth, int windowHeight);
 	void OnBeginGraphics();
 	void OnEndGraphics();
-	void DrawGdi(GDIBitmap gdi, Direction direction);
+	void DrawGdi(GDIBitmap gdi, Direction direction, bool player);
 	void DrawString(const std::wstring text, COLORREF color, int x, int y) const;
 
 	void DrawWinGame();
@@ -63,7 +63,14 @@ public:
 
 	BITMAPINFO bitmapInfo;
 	void CustomFillRect(RECT rect, int r, int g, int b);
-	void ReversePixels(BYTE bytes[], int count);
+	unsigned char * GetReversePixels(unsigned char * bytes, int count);
+
+	void InitBitmap(GDIBitmap gdi);
+
+	std::vector<BITMAPINFO> bitmapInfos;
+	std::vector<unsigned char *> pixelPlayersBytes;
+	std::vector<unsigned char *> reversedPixelPlayersBytes;
+
 
 private:
 };

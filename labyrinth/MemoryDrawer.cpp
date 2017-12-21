@@ -68,8 +68,7 @@ void MemoryDrawer::OnEndGraphics()
 	SetDIBitsToDevice(defaultHdc, 0, 0, bitmapInfo.bmiHeader.biWidth, bitmapInfo.bmiHeader.biHeight, 0, 0, 0, bitmapInfo.bmiHeader.biHeight, &bytes[0], &bitmapInfo, DIB_RGB_COLORS);
 }
 
-void MemoryDrawer::DrawGdi(GDIBitmap gdi, Direction direction)
-{
+void MemoryDrawer::InitBitmap(GDIBitmap gdi) {
 	BITMAPINFO tempBmp = { 0 };
 	tempBmp.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
 	tempBmp.bmiHeader.biBitCount = 24;
@@ -83,10 +82,23 @@ void MemoryDrawer::DrawGdi(GDIBitmap gdi, Direction direction)
 	unsigned char *bits = new unsigned char[dwBmpSize];
 
 	GetDIBits(defaultHdc, gdi.handle, 0, gdi.height, bits, &tempBmp, DIB_RGB_COLORS);
+
+	bitmapInfos.push_back(tempBmp);
+	pixelPlayersBytes.push_back(bits);
+	reversedPixelPlayersBytes.push_back(GetReversePixels(bits, dwBmpSize));
+}
+
+void MemoryDrawer::DrawGdi(GDIBitmap gdi, Direction direction, bool player)
+{
+	int index = player ? 0 : 1;
+	BITMAPINFO tempBmp = bitmapInfos.at(index);
+	unsigned char * bits = pixelPlayersBytes.at(index);
+
+	auto t = ((gdi.width * 24 + 31) / 32) * 4;
+	DWORD dwBmpSize = t * gdi.height;
 	
 	int fourthX = gdi.points[1].x + gdi.points[2].x - gdi.points[0].x;
 	int fourthY = gdi.points[1].y + gdi.points[2].y - gdi.points[0].y;
-	int countBits = tempBmp.bmiHeader.biWidth * tempBmp.bmiHeader.biHeight * 3;
 
 	switch (direction)
 	{
@@ -115,7 +127,7 @@ void MemoryDrawer::DrawGdi(GDIBitmap gdi, Direction direction)
 			break;
 	case Direction::Up:
 
-		ReversePixels(bits, countBits);
+		bits = reversedPixelPlayersBytes.at(index);
 
 		for (int lx = 0; lx < tempBmp.bmiHeader.biWidth; lx++)
 		{
@@ -140,7 +152,7 @@ void MemoryDrawer::DrawGdi(GDIBitmap gdi, Direction direction)
 		}
 		break;
 		case Direction::Left:
-			ReversePixels(bits, countBits);
+			bits = reversedPixelPlayersBytes.at(index);
 			for (int lx = 0; lx < tempBmp.bmiHeader.biHeight; lx++)
 			{
 				for (int ly = 0; ly < tempBmp.bmiHeader.biWidth; ly++)
@@ -188,27 +200,20 @@ void MemoryDrawer::DrawGdi(GDIBitmap gdi, Direction direction)
 			break;
 	}
 	
-	delete bits;
 
 
 	//SelectObject(bitmapDC, gdi.handle);
 	//PlgBlt(backbufferDC, gdi.points, bitmapDC, 0, 0, gdi.width, gdi.height, NULL, 0, 0);
 }
 
-void MemoryDrawer::ReversePixels(BYTE bits[], int count) {
-	for (int i = 0; i < (count / 2); i += 3) {
-		BYTE temporaryR = bits[i];
-		BYTE temporaryG = bits[i + 1];
-		BYTE temporaryB = bits[i + 2];
-
-		bits[i] = bits[(count - 1) - i - 2];
-		bits[i + 1] = bits[(count - 1) - i - 1];
-		bits[i + 2] = bits[(count - 1) - i];
-
-		bits[(count - 1) - i - 2] = temporaryR;
-		bits[(count - 1) - i - 1] = temporaryG;
-		bits[(count - 1) - i] = temporaryB;
+unsigned char * MemoryDrawer::GetReversePixels(unsigned char * bits, int count) {
+	unsigned char *result = new unsigned char[count];
+	for (int i = 0; i < count; i += 3) {
+		result[i] = (bits[(count - 1) - i - 2]);
+		result[i+1] = (bits[(count - 1) - i - 1]);
+		result[i + 2] = (bits[(count - 1) - i]);
 	}
+	return result;
 }
 
 void MemoryDrawer::DrawString(const std::wstring text, COLORREF color, int x, int y) const

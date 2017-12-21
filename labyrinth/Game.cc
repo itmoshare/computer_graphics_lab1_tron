@@ -123,7 +123,7 @@ void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
 	bool isPlayer = bitmap.index == 0;
-	memDrawer->DrawGdi(gdi, isPlayer ? allPlayers[0]->currentDirection : allPlayers[1]->currentDirection);
+	memDrawer->DrawGdi(gdi, isPlayer ? allPlayers[0]->currentDirection : allPlayers[1]->currentDirection, isPlayer);
 }
 
 
@@ -228,6 +228,7 @@ void Game::InitGDI(int x, int y, int index, bool revert) {
 	}
 	
 	gdiBitmaps[index] = gdi;
+	memDrawer->InitBitmap(gdi);
 }
 
 void Game::InitPlayers() {
