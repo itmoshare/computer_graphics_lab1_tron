@@ -53,21 +53,15 @@ void OpenGlDrawer::OnBeginGraphics()
 {
 	// Clear the screen
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	for(int i=0; i < backVertexes.size(); i++)
+	for(int i=0; i < backBuffers.size(); i++)
 	{
-		this->DrawBackgroundRectWithShader(backVertexes[i], backTypes[i]);
+		this->DrawBackgroundRectWithShader(backBuffers[i], backTypes[i]);
 	}	
 }
 
-void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, int type) {
 
-	//GLfloat* vertex_buffe_data = &vertexes[0];
-	GLfloat vertex_buffe_data[] = {
-		vertexes[0], vertexes[1],vertexes[2],
-		vertexes[3],vertexes[4],vertexes[5],
-		vertexes[6],vertexes[7],vertexes[8],
-		vertexes[9],vertexes[10],vertexes[11],
-	};
+
+void OpenGlDrawer::DrawBackgroundRectWithShader(GLuint buffer, int type) {
 
 	glUseProgram(programWalls);
 
@@ -77,9 +71,8 @@ void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, i
 
 	// Указываем, что первым буфером атрибутов будут вершины
 	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, vertexbuffer);
-	// Передадим информацию о вершинах в OpenGL
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data), vertex_buffe_data, GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+
 	glVertexAttribPointer(
 		0,                  // Атрибут 0. Подробнее об этом будет рассказано в части, посвященной шейдерам.
 		3,                  // Размер
@@ -170,6 +163,23 @@ void OpenGlDrawer::InitPlayersBuffers(GDIBitmap gdiPlayer, GDIBitmap gdiComputer
 	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoordData), texCoordData, GL_STATIC_DRAW);
 }
 
+void OpenGlDrawer::InitFloorBuffers() {
+	for (int i = 0; i < backVertexes.size(); i++)
+	{
+		GLuint wallBuffer;
+		glGenBuffers(1, &wallBuffer);
+		GLfloat vertex_buffe_data[] = {
+			backVertexes[i][0], backVertexes[i][1],backVertexes[i][2],
+			backVertexes[i][3],backVertexes[i][4],backVertexes[i][5],
+			backVertexes[i][6],backVertexes[i][7],backVertexes[i][8],
+			backVertexes[i][9],backVertexes[i][10],backVertexes[i][11],
+		};
+		glBindBuffer(GL_ARRAY_BUFFER, wallBuffer);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data), vertex_buffe_data, GL_STATIC_DRAW);
+		backBuffers.push_back(wallBuffer);
+	}
+}
+
 void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player, Direction direction, int changeWnd)
 {
 	glUseProgram(this->programPlayers);
@@ -180,7 +190,7 @@ void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player, Direction direction, int 
 	GLfloat newY = (hh - gdi.points[0].y) / hh;
 
 	glm::vec3 startpos = player ? playerStartPos : computerStartPos;
-	glm::mat4 Model; //*glm::rotate(90.0f, glm::vec3(0, 1, 0));
+	glm::mat4 Model;
 
 	switch (direction)
 	{
@@ -211,10 +221,7 @@ void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player, Direction direction, int 
 	glUniformMatrix4fv(MatrixID2, 1, GL_FALSE, &MVP[0][0]);
 
 
-	int texutre_id;
-	if (player)
-		texutre_id = 0;
-	else texutre_id = 1;
+	int texutre_id = player ? 0 : 1;
 			
 	//// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
@@ -287,6 +294,24 @@ void OpenGlDrawer::SizeOpenGLScreen(int width, int height)
 	{
 		height = 1;										// Make the Height Equal One
 	}
+
+}
+
+void OpenGlDrawer::DrawTrack(RECT rect, int type){
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	std::vector<GLfloat> tempBuf = GetVertexBufferData(rect);
+
+	GLfloat vertex_buffe_data[] = {
+		tempBuf[0], tempBuf[1],tempBuf[2],
+		tempBuf[3],tempBuf[4],tempBuf[5],
+		tempBuf[6],tempBuf[7],tempBuf[8],
+		tempBuf[9],tempBuf[10],tempBuf[11],
+	};
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data), vertex_buffe_data, GL_STATIC_DRAW);
+	backBuffers.push_back(buffer);
+	backTypes.push_back(type);
 
 }
 

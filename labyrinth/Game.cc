@@ -114,6 +114,7 @@ void Game::InitializeGraphics(HWND window)
 	//comment when memory drawer
 	memDrawer->CreateTextures(gdiBitmaps.at(0).handle, gdiBitmaps.at(1).handle);
 	memDrawer->InitPlayersBuffers(gdiBitmaps.at(0), gdiBitmaps.at(1));
+	memDrawer->InitFloorBuffers();
 }
 
 void Game::BeginGraphics() {

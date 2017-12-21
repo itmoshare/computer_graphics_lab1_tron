@@ -75,6 +75,8 @@ public:
 	std::vector<RECT> backRects;
 	std::vector<int>  backTypes;
 	std::vector<std::vector<GLfloat>> backVertexes;
+	std::vector<GLuint> backBuffers;
+
 
 	GLuint vertexbuffer;
 	GLuint vertexBufferComputer;
@@ -123,13 +125,14 @@ public:
 	GLuint TextureID;
 
 	void InitPlayersBuffers(GDIBitmap gdiPlayer, GDIBitmap gdiComputer);
-	void InitPlayer(GDIBitmap gdi);
+	void InitFloorBuffers();
 	GLfloat vertex_buffe_data[12];
 
 	glm::vec3 playerStartPos;
 	glm::vec3 computerStartPos;
 
-	void DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, int type);
+	void DrawBackgroundRectWithShader(GLuint buffer, int type);
+	void DrawTrack(RECT rect, int type);
 	std::vector<GLfloat> GetVertexBufferData(RECT rect);
 private:
 	void SetGameoverFontSettings();
