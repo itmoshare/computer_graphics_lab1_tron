@@ -68,7 +68,7 @@ void MemoryDrawer::OnEndGraphics()
 	SetDIBitsToDevice(defaultHdc, 0, 0, bitmapInfo.bmiHeader.biWidth, bitmapInfo.bmiHeader.biHeight, 0, 0, 0, bitmapInfo.bmiHeader.biHeight, &bytes[0], &bitmapInfo, DIB_RGB_COLORS);
 }
 
-void MemoryDrawer::DrawGdi(GDIBitmap gdi)
+void MemoryDrawer::DrawGdi(GDIBitmap gdi, Direction direction)
 {
 	BITMAPINFO tempBmp = { 0 };
 	tempBmp.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -84,32 +84,131 @@ void MemoryDrawer::DrawGdi(GDIBitmap gdi)
 
 	GetDIBits(defaultHdc, gdi.handle, 0, gdi.height, bits, &tempBmp, DIB_RGB_COLORS);
 	
-	for (int lx = 0; lx < tempBmp.bmiHeader.biWidth; lx++)
+	int fourthX = gdi.points[1].x + gdi.points[2].x - gdi.points[0].x;
+	int fourthY = gdi.points[1].y + gdi.points[2].y - gdi.points[0].y;
+	int countBits = tempBmp.bmiHeader.biWidth * tempBmp.bmiHeader.biHeight * 3;
+
+	switch (direction)
 	{
-		for (int ly = 0; ly < tempBmp.bmiHeader.biHeight; ly++)
+	case Direction::Down:
+		for (int lx = 0; lx < tempBmp.bmiHeader.biWidth; lx++)
 		{
-			int ax = gdi.points[0].x + lx;
-			int ay = windowHeight - gdi.points[0].y - ly;
+			for (int ly = 0; ly < tempBmp.bmiHeader.biHeight; ly++)
+			{
+				int ax = fourthX + lx;
+				int ay = windowHeight - fourthY - ly;
 
-			if (ax * 3 >= windowWidth * 3 ||
-				ay * 3 >= windowHeight * 3 ||
-				ax < 0 ||
-				ay < 0)
-				continue;
-			int globalPixel = ax * 3 + ay * windowWidth * 3;
-			int imagePixel = lx * 3 + ly * t;
+				if (ax * 3 >= windowWidth * 3 ||
+					ay * 3 >= windowHeight * 3 ||
+					ax < 0 ||
+					ay < 0)
+					continue;
+				int globalPixel = ax * 3 + ay * windowWidth * 3;
+				int imagePixel = lx * 3 + ly * t;
 
-			bytes[globalPixel] = bits[imagePixel];
-			bytes[globalPixel + 1] = bits[imagePixel + 1];
-			bytes[globalPixel + 2] = bits[imagePixel + 2];
+				bytes[globalPixel] = bits[imagePixel];
+				bytes[globalPixel + 1] = bits[imagePixel + 1];
+				bytes[globalPixel + 2] = bits[imagePixel + 2];
 
+			}
 		}
+			break;
+	case Direction::Up:
+
+		ReversePixels(bits, countBits);
+
+		for (int lx = 0; lx < tempBmp.bmiHeader.biWidth; lx++)
+		{
+			for (int ly = 0; ly < tempBmp.bmiHeader.biHeight; ly++)
+			{
+				int ax = gdi.points[0].x + lx;
+				int ay = windowHeight - gdi.points[0].y - ly;
+
+				if (ax * 3 >= windowWidth * 3 ||
+					ay * 3 >= windowHeight * 3 ||
+					ax < 0 ||
+					ay < 0)
+					continue;
+				int globalPixel = ax * 3 + ay * windowWidth * 3;
+				int imagePixel = lx * 3 + ly * t;
+
+				bytes[globalPixel] = bits[imagePixel];
+				bytes[globalPixel + 1] = bits[imagePixel +1];
+				bytes[globalPixel + 2] = bits[imagePixel+2];
+
+			}
+		}
+		break;
+		case Direction::Left:
+			ReversePixels(bits, countBits);
+			for (int lx = 0; lx < tempBmp.bmiHeader.biHeight; lx++)
+			{
+				for (int ly = 0; ly < tempBmp.bmiHeader.biWidth; ly++)
+				{
+					int ax = gdi.points[1].x + lx;
+					int ay = windowHeight - gdi.points[1].y - ly;
+
+					if (ax * 3 >= windowWidth * 3 ||
+						ay * 3 >= windowHeight * 3 ||
+						ax < 0 ||
+						ay < 0)
+						continue;
+					int globalPixel = ax * 3 + ay * windowWidth * 3;
+					int imagePixel = ly * 3 + lx * t;
+
+					bytes[globalPixel] = bits[imagePixel];
+					bytes[globalPixel + 1] = bits[imagePixel + 1];
+					bytes[globalPixel + 2] = bits[imagePixel + 2];
+
+				}
+			}
+			break;
+		case Direction::Right:
+			for (int lx = 0; lx < tempBmp.bmiHeader.biHeight; lx++)
+			{
+				for (int ly = 0; ly < tempBmp.bmiHeader.biWidth; ly++)
+				{
+					int ax = gdi.points[2].x + lx;
+					int ay = windowHeight - gdi.points[2].y - ly;
+
+					if (ax * 3 >= windowWidth * 3 ||
+						ay * 3 >= windowHeight * 3 ||
+						ax < 0 ||
+						ay < 0)
+						continue;
+					int globalPixel = ax * 3 + ay * windowWidth * 3;
+					int imagePixel = ly * 3 + lx * t;
+
+					bytes[globalPixel] = bits[imagePixel];
+					bytes[globalPixel + 1] = bits[imagePixel + 1];
+					bytes[globalPixel + 2] = bits[imagePixel + 2];
+
+				}
+			}
+			break;
 	}
+	
 	delete bits;
 
 
 	//SelectObject(bitmapDC, gdi.handle);
 	//PlgBlt(backbufferDC, gdi.points, bitmapDC, 0, 0, gdi.width, gdi.height, NULL, 0, 0);
+}
+
+void MemoryDrawer::ReversePixels(BYTE bits[], int count) {
+	for (int i = 0; i < (count / 2); i += 3) {
+		BYTE temporaryR = bits[i];
+		BYTE temporaryG = bits[i + 1];
+		BYTE temporaryB = bits[i + 2];
+
+		bits[i] = bits[(count - 1) - i - 2];
+		bits[i + 1] = bits[(count - 1) - i - 1];
+		bits[i + 2] = bits[(count - 1) - i];
+
+		bits[(count - 1) - i - 2] = temporaryR;
+		bits[(count - 1) - i - 1] = temporaryG;
+		bits[(count - 1) - i] = temporaryB;
+	}
 }
 
 void MemoryDrawer::DrawString(const std::wstring text, COLORREF color, int x, int y) const

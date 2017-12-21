@@ -15,6 +15,7 @@
 #include "WindowOptions.h"
 #include "Bitmap.h"
 #include "GDIBitmap.h"
+#include "Direction.h"
 
 class MemoryDrawer {
 public:
@@ -23,7 +24,7 @@ public:
 	void OnInitializeGraphice(HWND window, int windowWidth, int windowHeight);
 	void OnBeginGraphics();
 	void OnEndGraphics();
-	void DrawGdi(GDIBitmap gdi);
+	void DrawGdi(GDIBitmap gdi, Direction direction);
 	void DrawString(const std::wstring text, COLORREF color, int x, int y) const;
 
 	void DrawWinGame();
@@ -62,6 +63,7 @@ public:
 
 	BITMAPINFO bitmapInfo;
 	void CustomFillRect(RECT rect, int r, int g, int b);
+	void ReversePixels(BYTE bytes[], int count);
 
 private:
 };

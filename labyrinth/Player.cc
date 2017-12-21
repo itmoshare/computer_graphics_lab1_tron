@@ -120,16 +120,16 @@ RECT Player::GetRectNormalized(RECT rect, Direction direction, int change) {
 	switch (currentDirection)
 	{
 	case Left:
-		rectOut = { rect.left, rect.top -width, rect.left + change, rect.top };
+		rectOut = { rect.left, rect.top - width -1, rect.left + change + 1, rect.top };
 		break;
 	case Right:
-		rectOut = { rect.left - change, rect.top, rect.left, rect.top + width };
+		rectOut = { rect.left - change -2, rect.top, rect.left, rect.top + width };
 		break;
 	case Down:
-		rectOut = { rect.left - width , rect.top - change , rect.left, rect.top };
+		rectOut = { rect.left - width , rect.top - change -1, rect.left, rect.top };
 		break;
 	case Up:
-		rectOut = { rect.left, rect.top, rect.left + width , rect.top + change };
+		rectOut = { rect.left , rect.top, rect.left + width +1 , rect.top + change };
 		break;
 	}
 	return rectOut;
