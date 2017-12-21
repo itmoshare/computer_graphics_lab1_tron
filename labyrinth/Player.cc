@@ -18,7 +18,7 @@ Player::Player(Bitmap figure, HBRUSH trackBrush, int x, int y, RECT field) {
 	this->afterTurn = false;
 }
 
-void Player::DrawTrack(std::shared_ptr<OpenGlDrawer> drawer, int length) {
+void Player::DrawTrack(std::shared_ptr<MemoryDrawer> drawer, int length) {
 	RECT newTrackRect;
 	int rectLeft;
 	int rectTop;
@@ -109,12 +109,33 @@ void Player::DrawTrack(std::shared_ptr<OpenGlDrawer> drawer, int length) {
 
 			break;
 	}
-	drawer->DrawBackgroundRect(newTrackRect, trackBrush);
+	drawer->DrawBackgroundRect(GetRectNormalized(newTrackRect, currentDirection, length), trackBrush);
 	afterTurn = false;
 	
 }
 
-void Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer) {
+RECT Player::GetRectNormalized(RECT rect, Direction direction, int change) {
+	int width = WindowOption::PATH_WIDTH / 2;
+	RECT rectOut;
+	switch (currentDirection)
+	{
+	case Left:
+		rectOut = { rect.left, rect.top -width, rect.left + change, rect.top };
+		break;
+	case Right:
+		rectOut = { rect.left - change, rect.top, rect.left, rect.top + width };
+		break;
+	case Down:
+		rectOut = { rect.left - width , rect.top - change , rect.left, rect.top };
+		break;
+	case Up:
+		rectOut = { rect.left, rect.top, rect.left + width , rect.top + change };
+		break;
+	}
+	return rectOut;
+}
+
+void Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<MemoryDrawer> drawer) {
 	int stepLength = 1;
 	int change = stepLength * speed;
 	switch (currentDirection)

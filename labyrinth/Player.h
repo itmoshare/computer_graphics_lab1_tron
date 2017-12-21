@@ -36,8 +36,9 @@ public:
 	void ReduceSpeed();
 	void UpSpeed();
 	bool CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers);
-	void Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer);
+	void Move(LPPOINT points, bool drawTrack, std::shared_ptr<MemoryDrawer> drawer);
 	RECT GetCurrentRectNormalized();
+	RECT GetRectNormalized(RECT rect, Direction direction, int change);
 	bool IsCollizedWithPlayerRect(RECT rect);
 
 	int GetPointCode(RECT rect, POINT p);
@@ -56,7 +57,7 @@ public:
 	bool afterTurn;
 
 private:
-	void DrawTrack(std::shared_ptr<OpenGlDrawer> drawer, int length);
+	void DrawTrack(std::shared_ptr<MemoryDrawer> drawer, int length);
 
 	HBRUSH trackBrush;
 };

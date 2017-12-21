@@ -53,6 +53,16 @@ public:
 	HGDIOBJ def_font;
 
 
+	std::vector<RECT> backRects;
+	std::vector<HBRUSH>  brashes;
+
+	//DIBits
+	BYTE * bytes;
+	BYTE * backBytes;
+
+	BITMAPINFO bitmapInfo;
+	void CustomFillRect(RECT rect, int r, int g, int b);
+
 private:
 };
 #endif

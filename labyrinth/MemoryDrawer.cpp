@@ -4,41 +4,112 @@ void MemoryDrawer::OnInitializeGraphice(HWND window, int windowWidth, int window
 {
 	this->window = window;
 	this->defaultHdc = GetDC(window);
-	this->windowWidth = windowWidth;
-	this->windowHeight = windowHeight;
-	//save drawn background to not redraw it everytime
-	backgroundBufferDC = CreateCompatibleDC(defaultHdc);
-	backgroundBufferBitmap = CreateCompatibleBitmap(defaultHdc, windowWidth, windowHeight);
-	oldObject2 = SelectObject(backgroundBufferDC, backgroundBufferBitmap);
+	RECT clientRect;
+	GetClientRect(this->window, &clientRect);
 
-	// Double buffering
-	backbufferDC = CreateCompatibleDC(defaultHdc);
-	backbufferBitmap = CreateCompatibleBitmap(defaultHdc, windowWidth, windowHeight);
-	oldObject = SelectObject(backbufferDC, backbufferBitmap);
 
-	bitmapDC = CreateCompatibleDC(backgroundBufferDC);
+	this->windowWidth = clientRect.right - clientRect.left;
+	this->windowHeight = clientRect.bottom - clientRect.top;
+	
+	this->bitmapInfo = { 0 };
+	this->bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	this->bitmapInfo.bmiHeader.biBitCount = 24;
+	this->bitmapInfo.bmiHeader.biWidth = this->windowWidth;
+	this->bitmapInfo.bmiHeader.biHeight = this->windowHeight;
+	this->bitmapInfo.bmiHeader.biPlanes = 1;
+	this->bitmapInfo.bmiHeader.biCompression = 0;
 
+	bytes = new BYTE[3 * this->windowWidth * this->windowHeight];
+	backBytes = new BYTE[3 * this->windowWidth * this->windowHeight];
+	//clear
+	for (int i = 0; i < this->bitmapInfo.bmiHeader.biWidth * this->bitmapInfo.bmiHeader.biHeight * 3; i++)
+	{
+		backBytes[i] = 0;
+	}
+}
+
+void MemoryDrawer::CustomFillRect(RECT rect, int r, int g, int b)
+{
+	auto t = (((rect.right - rect.left) * 24 + 31) / 32) * 4;
+	for (int lx = 0; lx < rect.right - rect.left; lx++)
+	{
+		for (int ly = 0; ly < rect.bottom - rect.top; ly++)
+		{
+			int ax = rect.left + lx;
+			int ay = (windowHeight - rect.top) - ly;
+
+			if (ax * 3 >= windowWidth * 3 ||
+				ay * 3 >= windowHeight * 3 ||
+				ax < 0 ||
+				ay < 0)
+				continue;
+			int globalPixel = ax * 3 + ay * windowWidth * 3;
+
+			backBytes[globalPixel] = b;
+			backBytes[globalPixel + 1] = g;
+			backBytes[globalPixel + 2] = r;
+		}
+	}
 }
 
 void MemoryDrawer::OnBeginGraphics()
 {
-	//copy drawn background to bufferdc
-	BitBlt(backbufferDC, 0, 0, windowWidth, windowHeight, backgroundBufferDC, 0, 0, SRCCOPY);
+	int countBits = this->bitmapInfo.bmiHeader.biWidth * this->bitmapInfo.bmiHeader.biHeight * 3;
+	////clear in black
+	for (int i = 0; i <  this->bitmapInfo.bmiHeader.biWidth * this->bitmapInfo.bmiHeader.biHeight * 3; i ++)
+	{
+		bytes[i] = backBytes[i];
+
+	}
 }
 
 void MemoryDrawer::OnEndGraphics()
 {
-	// Blit-block transfer to the main device context
-	HDC windowDC = GetDC(window);
-	BitBlt(windowDC, 0, 0, windowWidth, windowHeight, backbufferDC, 0, 0, SRCCOPY);
-	ReleaseDC(window, windowDC);	
-	DeleteObject(def_font);
+	SetDIBitsToDevice(defaultHdc, 0, 0, bitmapInfo.bmiHeader.biWidth, bitmapInfo.bmiHeader.biHeight, 0, 0, 0, bitmapInfo.bmiHeader.biHeight, &bytes[0], &bitmapInfo, DIB_RGB_COLORS);
 }
 
 void MemoryDrawer::DrawGdi(GDIBitmap gdi)
-{	
-	SelectObject(bitmapDC, gdi.handle);
-	PlgBlt(backbufferDC, gdi.points, bitmapDC, 0, 0, gdi.width, gdi.height, NULL, 0, 0);
+{
+	BITMAPINFO tempBmp = { 0 };
+	tempBmp.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	tempBmp.bmiHeader.biBitCount = 24;
+	tempBmp.bmiHeader.biWidth = gdi.width;
+	tempBmp.bmiHeader.biHeight = gdi.height;
+	tempBmp.bmiHeader.biPlanes = 1;
+	tempBmp.bmiHeader.biCompression = BI_RGB;
+
+	auto t = ((gdi.width * 24 + 31) / 32) * 4;
+	DWORD dwBmpSize = t * gdi.height;
+	unsigned char *bits = new unsigned char[dwBmpSize];
+
+	GetDIBits(defaultHdc, gdi.handle, 0, gdi.height, bits, &tempBmp, DIB_RGB_COLORS);
+	
+	for (int lx = 0; lx < tempBmp.bmiHeader.biWidth; lx++)
+	{
+		for (int ly = 0; ly < tempBmp.bmiHeader.biHeight; ly++)
+		{
+			int ax = gdi.points[0].x + lx;
+			int ay = windowHeight - gdi.points[0].y - ly;
+
+			if (ax * 3 >= windowWidth * 3 ||
+				ay * 3 >= windowHeight * 3 ||
+				ax < 0 ||
+				ay < 0)
+				continue;
+			int globalPixel = ax * 3 + ay * windowWidth * 3;
+			int imagePixel = lx * 3 + ly * t;
+
+			bytes[globalPixel] = bits[imagePixel];
+			bytes[globalPixel + 1] = bits[imagePixel + 1];
+			bytes[globalPixel + 2] = bits[imagePixel + 2];
+
+		}
+	}
+	delete bits;
+
+
+	//SelectObject(bitmapDC, gdi.handle);
+	//PlgBlt(backbufferDC, gdi.points, bitmapDC, 0, 0, gdi.width, gdi.height, NULL, 0, 0);
 }
 
 void MemoryDrawer::DrawString(const std::wstring text, COLORREF color, int x, int y) const
@@ -63,12 +134,31 @@ void MemoryDrawer::DrawLoseGame()
 
 void MemoryDrawer::DrawRect(RECT rect, HBRUSH brush)
 {
-	FillRect(backbufferDC, &rect, brush);
+	LOGBRUSH lb;
+	int r, g, b;
+	if (GetObject(brush, sizeof(LOGBRUSH), (LPSTR)&lb))
+	{
+		r = GetRValue(lb.lbColor);
+		g = GetGValue(lb.lbColor);
+		b = GetBValue(lb.lbColor);
+	}
+	this->CustomFillRect(rect, r, g, b);
 }
 
 void MemoryDrawer::DrawBackgroundRect(RECT rect, HBRUSH brush)
 {
-	FillRect(backgroundBufferDC, &rect, brush);
+	/*backRects.push_back(rect);
+	brashes.push_back(brush);*/
+
+	LOGBRUSH lb;
+	int r, g, b;
+	if (GetObject(brush, sizeof(LOGBRUSH), (LPSTR)&lb))
+	{
+		r = GetRValue(lb.lbColor);
+		g = GetGValue(lb.lbColor);
+		b = GetBValue(lb.lbColor);
+	}
+	this->CustomFillRect(rect, r, g, b);
 }
 
 void MemoryDrawer::SetGameoverFontSettings() {

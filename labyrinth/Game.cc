@@ -92,7 +92,7 @@ void Game::InitializeGraphics(HWND window)
 {
     this->window = window;
 
-	memDrawer = std::make_shared<OpenGlDrawer>();
+	memDrawer = std::make_shared<MemoryDrawer>();
    
     RECT windowSize = { 0 };
     windowSize = WindowOption::MAP_CANVAS_RECT;
@@ -110,7 +110,7 @@ void Game::InitializeGraphics(HWND window)
 
 	Game::InitPlayers();
 	//comment when memory drawer
-	memDrawer->CreateTextures(gdiBitmaps.at(0).handle, gdiBitmaps.at(1).handle);
+	//memDrawer->CreateTextures(gdiBitmaps.at(0).handle, gdiBitmaps.at(1).handle);
 }
 
 void Game::BeginGraphics() {
@@ -123,7 +123,7 @@ void Game::DrawBitmap(Bitmap bitmap, int x, int y) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
 	bool isPlayer = bitmap.index == 0;
-	memDrawer->DrawGdi(gdi, isPlayer);
+	memDrawer->DrawGdi(gdi);
 }
 
 
@@ -188,6 +188,7 @@ void Game::DrawLoseGame() {
 void Game::Render() {
 
 	BeginGraphics();
+
 	DrawPlayers();
 
 	if (this->IsPlayerWin()) {
