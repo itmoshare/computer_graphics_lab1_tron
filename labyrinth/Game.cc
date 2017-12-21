@@ -109,8 +109,11 @@ void Game::InitializeGraphics(HWND window)
 
 
 	Game::InitPlayers();
+	computerChange = 0;
+	playerChange = 0;
 	//comment when memory drawer
 	memDrawer->CreateTextures(gdiBitmaps.at(0).handle, gdiBitmaps.at(1).handle);
+	memDrawer->InitPlayersBuffers(gdiBitmaps.at(0), gdiBitmaps.at(1));
 }
 
 void Game::BeginGraphics() {
@@ -123,7 +126,8 @@ void Game::DrawBitmap(Bitmap bitmap, int x, int y, Direction direction) const
 {
     const GDIBitmap& gdi = gdiBitmaps.at(bitmap.index);
 	bool isPlayer = bitmap.index == 0;
-	memDrawer->DrawGdi(gdi, isPlayer, direction);
+	int change = isPlayer ? playerChange: computerChange;
+	memDrawer->DrawGdi(gdi, isPlayer, direction, change);
 }
 
 
@@ -146,7 +150,13 @@ void Game::MovePlayers() {
 		{
 			if (!allPlayers[i]->isDead) {
 				GDIBitmap gdi = gdiBitmaps.at(allPlayers[i]->figure.index);
-				allPlayers[i]->Move(gdi.points, true, memDrawer);
+				int change = allPlayers[i]->Move(gdi.points, true, memDrawer);
+
+				if (allPlayers[i]->figure.index == 0)
+					playerChange = change;
+				else
+					computerChange = change;
+
 				gdiBitmaps[allPlayers[i]->figure.index] = gdi;
 				allPlayers[i]->CheckIsDead(allPlayers);
 			}

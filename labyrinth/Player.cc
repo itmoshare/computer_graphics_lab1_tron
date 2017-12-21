@@ -115,27 +115,32 @@ void Player::DrawTrack(std::shared_ptr<OpenGlDrawer> drawer, int length) {
 	
 }
 
-void Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer) {
+int Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer) {
 	int stepLength = 1;
 	int change = stepLength * speed;
+	int changeAbs;
 	switch (currentDirection)
 	{
 	case Direction::Left:
+		changeAbs = -change;
 		this->X -= change;
 		points[1].x -= change;
 		points[2].x -= change;
 		break;
 	case Direction::Right:
+		changeAbs = change;
 		this->X += change;
 		points[1].x += change;
 		points[2].x += change;
 		break;
 	case Direction::Up:
+		changeAbs = -change;
 		this->Y -= change;
 		points[1].y -= change;
 		points[2].y -= change;
 		break;
 	case Direction::Down:
+		changeAbs = change;
 		this->Y += change;
 		points[1].y += change;
 		points[2].y += change;
@@ -144,6 +149,7 @@ void Player::Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> 
 	points[0] = { this->X, this->Y };
 	if(drawTrack)
 		DrawTrack(drawer, change);
+	return changeAbs;
 }
 
 void Player::ReduceSpeed() {

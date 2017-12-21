@@ -44,7 +44,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>C:\Projects\Repos\cg_tron_lab1\glm;$(LibraryPath)</LibraryPath>
-    <IncludePath>C:\Projects\Repos\cg_tron_lab1\glm;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Projects\Repos\cg_tron_lab1 - Copy_opnegl\glm;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

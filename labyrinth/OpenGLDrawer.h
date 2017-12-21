@@ -18,6 +18,7 @@
 #include <glut.h>
 // Include GLM
 #include <glm.hpp>
+#include <gtx/transform.hpp>
 #include <gtc/matrix_transform.hpp>
 
 
@@ -35,7 +36,7 @@ public:
 	void OnInitializeGraphice(HWND window, int windowWidth, int windowHeight);
 	void OnBeginGraphics();
 	void OnEndGraphics();
-	void DrawGdi(GDIBitmap gdi, bool player, Direction direction);
+	void DrawGdi(GDIBitmap gdi, bool player, Direction direction, int change);
 	void DrawString(const char * text) const;
 
 	void SizeOpenGLScreen(int width, int height);
@@ -76,6 +77,9 @@ public:
 	std::vector<std::vector<GLfloat>> backVertexes;
 
 	GLuint vertexbuffer;
+	GLuint vertexBufferComputer;
+	GLuint vertexBufferPlayer;
+
 	GLuint colorbuffer;
 	GLuint textureBuffer;
 	GLuint uvBuffer;
@@ -109,11 +113,21 @@ public:
 	HFONT hOldFont;
 	//new
 	GLuint VertexArrayID;
+	GLuint VertexArrayIDComputer;
+	GLuint VertexArrayIDPlayer;
+
 
 	GLuint programWalls;
 	GLuint programPlayers;
 
 	GLuint TextureID;
+
+	void InitPlayersBuffers(GDIBitmap gdiPlayer, GDIBitmap gdiComputer);
+	void InitPlayer(GDIBitmap gdi);
+	GLfloat vertex_buffe_data[12];
+
+	glm::vec3 playerStartPos;
+	glm::vec3 computerStartPos;
 
 	void DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, int type);
 	std::vector<GLfloat> GetVertexBufferData(RECT rect);

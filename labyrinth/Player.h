@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include "glm.hpp"
 
 #include "WindowOptions.h"
 #include "Direction.h"
@@ -36,7 +37,7 @@ public:
 	void ReduceSpeed();
 	void UpSpeed();
 	bool CheckIsDead(std::vector<std::shared_ptr<Player>> allPlayers);
-	void Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer);
+	int Move(LPPOINT points, bool drawTrack, std::shared_ptr<OpenGlDrawer> drawer);
 	RECT GetCurrentRectNormalized();
 	bool IsCollizedWithPlayerRect(RECT rect);
 

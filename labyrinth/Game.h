@@ -10,6 +10,7 @@
 #include <vector>
 #include <memory>
 #include <map>
+#include "glm.hpp"
 
 
 #include "WindowOptions.h"
@@ -75,6 +76,15 @@ public:
     int score;
 	int computerPlayersCount;
    
+	//glm
+	int computerChange;
+	int playerChange;
+
+	int coputerStartX;
+	int computerStartY;
+	int playerStartX;
+	int playerStartY;
+
 
 private: 
 	void DrawBackground(int windowWidth, int WindowHeight);

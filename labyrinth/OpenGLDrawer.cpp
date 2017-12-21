@@ -32,11 +32,18 @@ void OpenGlDrawer::OnInitializeGraphice(HWND window, int windowWidth, int window
 	// Создадим 1 буфер и поместим в переменную vertexbuffer его идентификатор
 	glGenBuffers(1, &vertexbuffer);
 
+	glGenVertexArrays(1, &VertexArrayIDComputer);
+	glBindVertexArray(VertexArrayIDComputer);
+	glGenBuffers(1, &vertexBufferComputer);
+
+	glGenVertexArrays(1, &VertexArrayIDPlayer);
+	glBindVertexArray(VertexArrayIDPlayer);
+	glGenBuffers(1, &vertexBufferPlayer);
+
 	//colors
 	glGenBuffers(1, &colorbuffer);
 
 	//texture
-	glGenBuffers(1, &textureBuffer);
 	glGenBuffers(1, &uvBuffer);
 	TextureID = glGetUniformLocation(programPlayers, "myTextureSampler");
 }
@@ -115,54 +122,113 @@ void OpenGlDrawer::DrawBackgroundRectWithShader(std::vector<GLfloat> vertexes, i
 	glDisableVertexAttribArray(1);
 }
 
-void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player, Direction direction)
+void OpenGlDrawer::InitPlayersBuffers(GDIBitmap gdiPlayer, GDIBitmap gdiComputer)
+{
+	LONG fourthX = gdiPlayer.points[1].x + gdiPlayer.points[2].x - gdiPlayer.points[0].x;
+	LONG fourthY = gdiPlayer.points[1].y + gdiPlayer.points[2].y - gdiPlayer.points[0].y;
+
+	std::vector<GLfloat> playerVertexBufferDataTemp3 = GetVertexBufferData({ gdiPlayer.points[0].x, gdiPlayer.points[0].y, fourthX, fourthY });
+	const GLfloat vertex_buffe_data3[] = {
+		playerVertexBufferDataTemp3[0], playerVertexBufferDataTemp3[1],playerVertexBufferDataTemp3[2],
+		playerVertexBufferDataTemp3[3],playerVertexBufferDataTemp3[4],playerVertexBufferDataTemp3[5] ,
+		playerVertexBufferDataTemp3[6],playerVertexBufferDataTemp3[7],playerVertexBufferDataTemp3[8] ,
+		playerVertexBufferDataTemp3[9],playerVertexBufferDataTemp3[10],playerVertexBufferDataTemp3[11],
+	};
+
+	playerStartPos = glm::vec3(playerVertexBufferDataTemp3[0], playerVertexBufferDataTemp3[1], playerVertexBufferDataTemp3[2]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPlayer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data3), vertex_buffe_data3, GL_STATIC_DRAW);
+
+	LONG fourthX2 = gdiComputer.points[1].x + gdiComputer.points[2].x - gdiComputer.points[0].x;
+	LONG fourthY2 = gdiComputer.points[1].y + gdiComputer.points[2].y - gdiComputer.points[0].y;
+
+	std::vector<GLfloat> playerVertexBufferDataTemp2 = GetVertexBufferData({ fourthX2, fourthY2, gdiComputer.points[0].x, gdiComputer.points[0].y });
+	const GLfloat vertex_buffe_data2[] = {
+		playerVertexBufferDataTemp2[0], playerVertexBufferDataTemp2[1],playerVertexBufferDataTemp2[2],
+		playerVertexBufferDataTemp2[3],playerVertexBufferDataTemp2[4],playerVertexBufferDataTemp2[5] ,
+		playerVertexBufferDataTemp2[6],playerVertexBufferDataTemp2[7],playerVertexBufferDataTemp2[8] ,
+		playerVertexBufferDataTemp2[9],playerVertexBufferDataTemp2[10],playerVertexBufferDataTemp2[11],
+	};
+
+	computerStartPos = glm::vec3(playerVertexBufferDataTemp2[0], playerVertexBufferDataTemp2[1], playerVertexBufferDataTemp2[2]);
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBufferComputer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data2), vertex_buffe_data2, GL_STATIC_DRAW);
+
+	//textureUv
+	const GLfloat texCoordData[] =
+	{
+		0.0, 1.0,
+		0.0, 0.0,
+		1.0, 0.0,
+		1.0, 1.0
+
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoordData), texCoordData, GL_STATIC_DRAW);
+}
+
+void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player, Direction direction, int changeWnd)
 {
 	glUseProgram(this->programPlayers);
-	glUniformMatrix4fv(MatrixID2, 1, GL_FALSE, &MVP[0][0]);
-	float angle;
+	
+	GLfloat wh = windowWidth * 1.0f / 2.0f;
+	GLfloat hh = windowHeight * 1.0f / 2.0f;
+	GLfloat newX = (gdi.points[0].x - wh) / wh;
+	GLfloat newY = (hh - gdi.points[0].y) / hh;
+
+	glm::vec3 startpos = player ? playerStartPos : computerStartPos;
+	glm::mat4 Model; //*glm::rotate(90.0f, glm::vec3(0, 1, 0));
+
 	switch (direction)
 	{
 		case Direction::Up:
-		case Direction::Down:
-			angle = 0;
+			Model = glm::translate(glm::vec3(newX, newY, 0) - startpos);
 			break;
-		case Direction::Left: 
-		case Direction::Right: 
-			angle = -90;
+		case Direction::Down:
+			Model = glm::translate(vec3(newX, newY, 0));
+			Model = glm::rotate(Model, glm::radians(180.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			Model = glm::translate(Model, vec3(-newX, -newY, 0));
+			Model = glm::translate(Model, glm::vec3(newX, newY, 0) - startpos);
+			break;
+		case Direction::Left:
+			Model = glm::translate(vec3(newX, newY, 0));
+			Model = glm::rotate(Model, glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			Model = glm::translate(Model, vec3(-newX, -newY, 0));
+			Model = glm::translate(Model, glm::vec3(newX, newY, 0) - startpos);
+				break;
+		case Direction::Right:
+			Model = glm::translate(vec3(newX, newY, 0));
+			Model = glm::rotate(Model, glm::radians(-90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+			Model = glm::translate(Model, vec3(-newX, -newY, 0));
+			Model = glm::translate(Model, glm::vec3(newX, newY, 0) - startpos);
 			break;
 	}
-	float s = sin(glm::radians(angle));
-	float c = cos(glm::radians(angle));
-	mat2 m = mat2(c, -s, s, c);
-	GLuint rotId = glGetUniformLocation(programPlayers, "rot");
-	
-	glUniformMatrix2fv(rotId, 1, GL_FALSE, &m[0][0]);
+	glm::mat4 MVP = Projection * View * Model;
+
+	glUniformMatrix4fv(MatrixID2, 1, GL_FALSE, &MVP[0][0]);
+
 
 	int texutre_id;
 	if (player)
 		texutre_id = 0;
 	else texutre_id = 1;
-
+			
 	//// Bind our texture in Texture Unit 0
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, g_Texture[texutre_id]);
 	// Set our "myTextureSampler" sampler to use Texture Unit 0
 	glUniform1i(TextureID, 0);
 	glEnableVertexAttribArray(0);
+	
+	if (player)
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferPlayer);
+	else
+		glBindBuffer(GL_ARRAY_BUFFER, vertexBufferComputer);
 
-	LONG fourthX = gdi.points[1].x + gdi.points[2].x - gdi.points[0].x;
-	LONG fourthY = gdi.points[1].y + gdi.points[2].y - gdi.points[0].y;
 
-	std::vector<GLfloat> playerVertexBufferDataTemp = GetVertexBufferData({gdi.points[0].x, gdi.points[0].y, fourthX, fourthY});
-	GLfloat vertex_buffe_data[] = {
-		playerVertexBufferDataTemp[0], playerVertexBufferDataTemp[1],playerVertexBufferDataTemp[2],
-		playerVertexBufferDataTemp[3],playerVertexBufferDataTemp[4],playerVertexBufferDataTemp[5] ,
-		playerVertexBufferDataTemp[6],playerVertexBufferDataTemp[7],playerVertexBufferDataTemp[8] ,
-		playerVertexBufferDataTemp[9],playerVertexBufferDataTemp[10],playerVertexBufferDataTemp[11],
-	};
-
-	glBindBuffer(GL_ARRAY_BUFFER, textureBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_buffe_data), vertex_buffe_data, GL_STATIC_DRAW);
 	glVertexAttribPointer(
 		0,                                // attribute. No particular reason for 1, but must match the layout in the shader.
 		3,                                // size
@@ -172,18 +238,9 @@ void OpenGlDrawer::DrawGdi(GDIBitmap gdi, bool player, Direction direction)
 		(void*)0                        // array buffer offset
 	);
 
-	const GLfloat texCoordData[] =
-	{
-		0.0, 1.0,
-		0.0, 0.0,
-		1.0, 0.0,
-		1.0, 1.0
-		
-	};
 
 	glEnableVertexAttribArray(1);
 	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(texCoordData), texCoordData, GL_STATIC_DRAW);
 
 	glVertexAttribPointer(
 		1,                                // attribute. No particular reason for 1, but must match the layout in the shader.

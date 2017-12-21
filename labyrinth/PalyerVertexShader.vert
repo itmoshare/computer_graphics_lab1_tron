@@ -10,7 +10,6 @@ out vec2 UV;
 // Values that stay constant for the whole mesh.
 uniform mat4 MVP;
 
-uniform mat2 rot;
 
 void main(){
 
@@ -19,6 +18,6 @@ void main(){
 	
 	// rotate
 	// UV of the vertex. No special space for this one.
-	UV = vertexUV * rot;
+	UV = vertexUV;
 }
 
